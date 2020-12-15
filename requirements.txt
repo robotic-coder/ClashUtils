@@ -1,0 +1,4 @@
+coc.py
+discord.py
+python-dotenv
+psycopg2
