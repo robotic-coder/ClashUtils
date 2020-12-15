@@ -85,9 +85,9 @@ def create_output(clan: coc.Clan, participants: list, size: int, links: bool):
 		if links:
 			line_content = "\u2066"+line_content+" ["+player["name"]+"](https://link.clashofclans.com/en?action=OpenPlayerProfile&tag="+player["tag"][1:]+")"
 		lines.append(line_content)
-		
+
 		if len(lines) == size+4:
-			lines.append("`----- estimated top "+size+" -----`")
+			lines.append("`----- estimated top "+str(size)+" -----`")
 
 	for level, count in th_levels.items():
 		lines[0] += str(emojis.th[level])+"`"+str(count)+" `"
