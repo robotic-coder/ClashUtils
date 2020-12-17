@@ -19,6 +19,7 @@ class WarUtilsBot(discord.ext.commands.Bot):
 		extensions = [
 			"commands.admin",
 			"commands.cwl_roster",
+			"commands.current_war_map",
 			"commands.channel_link_manager",
 			"commands.invite"
 		]

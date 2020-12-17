@@ -2,17 +2,13 @@ import discord
 
 def pad_left(data, desired_length):
 	data = str(data)
-	for i in range(len(data), desired_length):
-		data = " "+data
-	return data
+	return spaces(desired_length-len(data))+data
 
 def pad_right(data, desired_length):
 	data = str(data)
-	for i in range(len(data), desired_length):
-		data = data+" "
-	return data
+	return data+spaces(desired_length-len(data))
 
-async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=discord.Embed()):
+async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=discord.Embed(), first_message_content=""):
 	while len(lines) > 0:
 		if (embed.description == discord.Embed.Empty):
 			embed.description = lines.pop(0)
@@ -26,12 +22,12 @@ async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=d
 			next_embed.set_footer(text=embed.footer.text, icon_url=embed.footer.icon_url)
 			embed.set_footer()
 
-		message = await channel.send(embed=embed)
+		message = await channel.send(first_message_content, embed=embed)
 		output = await send_lines_in_embed(channel, lines, next_embed)
 		output.append(message)
 		return output
 	else:
-		message = await channel.send(embed=embed)
+		message = await channel.send(first_message_content, embed=embed)
 		return [message]
 
 def resolve_clan(ctx):
@@ -45,3 +41,17 @@ def resolve_clan(ctx):
 		ctx.bot.storage.update_last_used(ctx.channel.id, ctx.prefix)
 
 	return (clan, params)
+
+def stars(num_stars):
+	output = ""
+	for _i in range(0, num_stars):
+		output += "★"
+	for _i in range(num_stars, 3):
+		output += "☆"
+	return output
+
+def round_fixed(input, num_places):
+	return ("{:."+str(num_places)+"f}").format(round(input, num_places))
+
+def spaces(num_spaces):
+	return " "*num_spaces
