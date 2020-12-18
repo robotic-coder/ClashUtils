@@ -103,4 +103,7 @@ def generate_hero_levels(player):
 	#if member.town_hall
 
 def setup(bot: discord.ext.commands.Bot):
+	roster.help = "Displays the CWL roster for the given clan. If no clan is given, the linked clan will be used."
+	roster.usage = "roster [#CLANTAG]"
+	setattr(roster, "example", "roster #8PQGQC8")
 	bot.add_command(roster)

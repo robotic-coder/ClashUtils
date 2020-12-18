@@ -5,23 +5,26 @@ import re
 import discord
 import discord.ext.commands
 import commands.utils.emojis as emojis
+from commands.easter_eggs import easter_eggs
 from utils.storage import Storage
 
 from dotenv import load_dotenv
 load_dotenv()
 
-class WarUtilsBot(discord.ext.commands.Bot):
+class ClashUtilsBot(discord.ext.commands.Bot):
 	def __init__(self):
 		super().__init__(
 			command_prefix=self.check_prefix,
-			activity=discord.Activity(type=discord.ActivityType.watching, details="my early development")
+			activity=discord.Activity(type=discord.ActivityType.watching, name="for @ClashUtils help")
 		)
 		extensions = [
 			"commands.admin",
 			"commands.cwl_roster",
 			"commands.current_war_map",
 			"commands.channel_link_manager",
-			"commands.invite"
+			"commands.invite",
+			"commands.damage_calculation",
+			"commands.help"
 		]
 		for extension in extensions:
 			self.load_extension(extension)
@@ -46,10 +49,13 @@ class WarUtilsBot(discord.ext.commands.Bot):
 		emojis.setup(self)
 	
 	async def on_message(self, message):
-		if message.author.bot:
-			return
+		if message.author.bot: return	
+		if os.environ["ENVIRONMENT"] == "dev" and message.author.id != 411964699429568513: return
+		if await easter_eggs(self, message): return
+		
 		ctx = await self.get_context(message, cls=discord.ext.commands.Context)
 		if ctx.command is None:
+			print(ctx.prefix)
 			return
 		await self.invoke(ctx)
 
@@ -64,9 +70,10 @@ class WarUtilsBot(discord.ext.commands.Bot):
 			del self.linked_channels[snowflake]
 
 	async def check_prefix(self, bot, message):
+		ping = ["<@786654276185096203> ", "<@!786654276185096203> "]
 		if message.channel.id in self.linked_channels:
-			return self.linked_channels[message.channel.id].keys()
-		else: return ["<@786654276185096203> ", "<@!786654276185096203> "]
+			return list(self.linked_channels[message.channel.id].keys()) + ping
+		else: return ping
 
-bot = WarUtilsBot()
+bot = ClashUtilsBot()
 bot.run(os.environ["DISCORD_TOKEN"])

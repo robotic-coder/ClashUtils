@@ -2,3 +2,4 @@ coc.py
 discord.py
 python-dotenv
 psycopg2
+heroku3

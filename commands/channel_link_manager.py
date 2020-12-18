@@ -55,5 +55,11 @@ async def unlink(ctx: discord.ext.commands.Context, *args):
 	print(channels)
 
 def setup(bot: discord.ext.commands.Bot):
+	link.help = "Links this channel and the given prefix to the given clan. When linked, you can call commands with this prefix and leave out clan tags."
+	link.usage = "link [#CLANTAG] [prefix]"
+	setattr(link, "example", "link #8PQGQC8 /")
 	bot.add_command(link)
+	unlink.help = "Unlinks this channel/prefix combination from its clan. You must use a previously-linked prefix."
+	unlink.usage = "unlink"
+	setattr(unlink, "example", "unlink")
 	bot.add_command(unlink)

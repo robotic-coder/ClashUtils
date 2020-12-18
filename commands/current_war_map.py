@@ -105,4 +105,7 @@ def get_time_delta(start=datetime.utcnow(), end=datetime.utcnow()):
 	return output
 
 def setup(bot: discord.ext.commands.Bot):
+	currentwar.help = "Shows the current war for the given clan. If no clan is given, the linked clan will be used."
+	currentwar.usage = "currentwar [#CLANTAG]"
+	setattr(currentwar, "example", "currentwar #8PQGQC8")
 	bot.add_command(currentwar)
