@@ -86,8 +86,6 @@ async def currentwar(ctx: discord.ext.commands.Context, *args):
 	else:
 		await ctx.channel.send("format: `<@786654276185096203> roster #CLANTAG`")
 
-#async def getWarSize(clash: Client, channel: TextChannel):
-
 def get_time_delta(start=datetime.utcnow(), end=datetime.utcnow()):
 	delta = end-start
 	if delta.seconds < 0:

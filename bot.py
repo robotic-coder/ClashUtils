@@ -21,9 +21,10 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			"commands.admin",
 			"commands.cwl_roster",
 			"commands.current_war_map",
-			"commands.channel_link_manager",
+			#"commands.channel_link_manager",
 			"commands.invite",
 			"commands.damage_calculation",
+			"commands.max_war_score",
 			"commands.help"
 		]
 		for extension in extensions:
