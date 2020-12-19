@@ -24,8 +24,8 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			"commands.cwl_roster",
 			"commands.damage_calculation",
 			"commands.invite",
-			"commands.help"
-			"commands.max_war_score",
+			"commands.help",
+			"commands.max_war_score"
 		]
 		for extension in extensions:
 			self.load_extension(extension)
