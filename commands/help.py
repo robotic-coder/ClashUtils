@@ -32,4 +32,5 @@ def setup(bot: discord.ext.commands.Bot):
 	help.help = "Shows this message, or more information about a specific command."
 	help.usage = "help [command]"
 	setattr(help, "example", "help damage")
+	setattr(help, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(help)

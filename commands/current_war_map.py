@@ -106,4 +106,5 @@ def setup(bot: discord.ext.commands.Bot):
 	currentwar.help = "Shows the current war for the given clan. If no clan is given, the linked clan will be used."
 	currentwar.usage = "currentwar [#CLANTAG]"
 	setattr(currentwar, "example", "currentwar #8PQGQC8")
+	setattr(currentwar, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(currentwar)

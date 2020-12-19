@@ -106,4 +106,5 @@ def setup(bot: discord.ext.commands.Bot):
 	roster.help = "Displays the CWL roster for the given clan. If no clan is given, the linked clan will be used."
 	roster.usage = "roster [#CLANTAG]"
 	setattr(roster, "example", "roster #8PQGQC8")
+	setattr(roster, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(roster)

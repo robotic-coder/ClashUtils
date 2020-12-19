@@ -22,6 +22,8 @@ async def test(ctx: discord.ext.commands.Context, *args):
 def setup(bot: discord.ext.commands.Bot):
 	if os.environ["ENVIRONMENT"] == "dev":
 		test.hidden = True
+		setattr(test, "required_permissions", ["send_messages"])
 		bot.add_command(test)
 	query.hidden = True
 	bot.add_command(query)
+	setattr(test, "required_permissions", ["send_messages"])

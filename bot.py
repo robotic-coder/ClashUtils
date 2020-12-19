@@ -19,13 +19,13 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		)
 		extensions = [
 			"commands.admin",
-			"commands.cwl_roster",
-			"commands.current_war_map",
 			#"commands.channel_link_manager",
-			"commands.invite",
+			"commands.current_war_map",
+			"commands.cwl_roster",
 			"commands.damage_calculation",
-			"commands.max_war_score",
+			"commands.invite",
 			"commands.help"
+			"commands.max_war_score",
 		]
 		for extension in extensions:
 			self.load_extension(extension)
@@ -56,9 +56,17 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		
 		ctx = await self.get_context(message, cls=discord.ext.commands.Context)
 		if ctx.command is None:
-			print(ctx.prefix)
 			return
-		await self.invoke(ctx)
+
+		missing_permissions = self.find_missing_permissions(ctx)
+		if len(missing_permissions) == 0:
+			await self.invoke(ctx)
+		else:
+			await ctx.channel.send("I am missing the following permission(s) in this channel:```\n"+"\n".join(missing_permissions)+"```")
+	
+	def find_missing_permissions(self, ctx: discord.ext.commands.Context):
+		permissions = ctx.channel.permissions_for(ctx.me)
+		return [p for p in ctx.command.required_permissions if getattr(permissions, p) == False]
 
 	def link_channel(self, snowflake, prefix, clan):
 		if snowflake not in self.linked_channels:

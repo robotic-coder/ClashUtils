@@ -79,4 +79,5 @@ def setup(bot: discord.ext.commands.Bot):
 	maxscore.help = "Calculates the maximum possible scores in a clan war."
 	maxscore.usage = "maxscore [#CLANTAG]"
 	setattr(maxscore, "example", "maxscore #8PQGQC8")
+	setattr(maxscore, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(maxscore)
