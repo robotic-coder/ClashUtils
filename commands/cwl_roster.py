@@ -31,7 +31,7 @@ async def roster(ctx: discord.ext.commands.Context, *args):
 			async for player in clash.get_players(player_tags):
 				participants.append(summarise_player(player))
 			
-			participants = sorted(participants, key=sort_participants)
+			participants = sorted(participants, key=sort_participants, reverse=True)
 			if len(args) == 1:	
 				lines = create_output(clan, participants, size, False)
 			elif len(args) == 2 and args[1] == "links":
