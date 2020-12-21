@@ -5,7 +5,7 @@ import commands.utils.helpers as helpers
 
 @discord.ext.commands.command()
 async def link(ctx: discord.ext.commands.Context, *args):
-	if ctx.member.guild_permissions.manage_guild == False:
+	if ctx.author.guild_permissions.manage_guild == False:
 		await ctx.channel.send("You need `Manage Server` permissions to add aliases in this server.")
 
 	if len(args) != 2:
@@ -35,7 +35,7 @@ async def link(ctx: discord.ext.commands.Context, *args):
 
 @discord.ext.commands.command()
 async def unlink(ctx: discord.ext.commands.Context, *args):
-	if ctx.member.guild_permissions.manage_guild == False:
+	if ctx.author.guild_permissions.manage_guild == False:
 		await ctx.channel.send("You need `Manage Server` permissions to remove aliases in this server.")
 
 	if len(args) != 1:
