@@ -31,6 +31,7 @@ async def roster(ctx: discord.ext.commands.Context, *args):
 			async for player in clash.get_players(player_tags):
 				participants.append(summarise_player(player))
 			
+			participants = sorted(participants, key=sort_participants)
 			if len(args) == 1:	
 				lines = create_output(clan, participants, size, False)
 			elif len(args) == 2 and args[1] == "links":
@@ -47,7 +48,8 @@ async def roster(ctx: discord.ext.commands.Context, *args):
 		await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
 	
 
-#async def getWarSize(clash: Client, channel: TextChannel):
+def sort_participants(p):
+	return (p["th"], p["heroes"], p["Archer Queen"], p["Royal Champion"], p["Grand Warden"], p["Barbarian King"], p["army"])
 
 def summarise_player(player: coc.Player):
 	output = {
@@ -67,8 +69,9 @@ def summarise_player(player: coc.Player):
 		if len(hero_filtered) > 0:
 			output[hero_name] = hero_filtered[0].level
 			output["heroes"] += hero_filtered[0].level
+			output["max_heroes"] += hero_filtered[0].max_level
 		else:
-			output[hero_name] = 0
+			output[hero_name] = ""
 	return output
 
 def create_output(clan: coc.Clan, participants: list, size: int, links: bool):
