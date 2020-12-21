@@ -8,7 +8,7 @@ async def invite(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot):
 	invite.help = "Sends a link that can be used to add me to a server."
-	invite.usage = "invite"
-	setattr(invite, "example", "invite")
+	invite.usage = ""
+	setattr(invite, "example", "")
 	setattr(invite, "required_permissions", ["send_messages", "embed_links"])
 	bot.add_command(invite)

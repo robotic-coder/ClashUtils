@@ -72,7 +72,7 @@ async def damage(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot):
 	damage.help = "Calculates damage from lightning/earthquake spells and the Royal Champion's Seeking Shield ability."
-	damage.usage = "damage [building hp] [qty]x [item][level], [qty]x [item][level]..."
-	setattr(damage, "example", "damage 4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9")
+	damage.usage = "[building hp] [qty]x [item][level], [qty]x [item][level]..."
+	setattr(damage, "example", "4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9")
 	setattr(damage, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(damage)

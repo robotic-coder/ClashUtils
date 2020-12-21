@@ -30,17 +30,13 @@ async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=d
 		message = await channel.send(first_message_content, embed=embed)
 		return [message]
 
-def resolve_clan(ctx):
-	clan = None
-	params = ctx.args[1:]
-
-	if len(params) > 0 and params[0].startswith("#"):
-		clan = params.pop(0)
-	elif ctx.channel.id in ctx.bot.linked_channels and ctx.prefix in ctx.bot.linked_channels[ctx.channel.id]:
-		clan = ctx.bot.linked_channels[ctx.channel.id][ctx.prefix]
-		ctx.bot.storage.update_last_used(ctx.channel.id, ctx.prefix)
-
-	return (clan, params)
+def resolve_clan(tag_or_alias, ctx):
+	if tag_or_alias.startswith("#"):
+		return tag_or_alias
+	elif ctx.guild.id in ctx.bot.aliases and tag_or_alias in ctx.bot.aliases[ctx.guild.id]:
+		ctx.bot.storage.update_last_used(ctx.guild.id, tag_or_alias)
+		return ctx.bot.aliases[ctx.guild.id][tag_or_alias]
+	else: return None
 
 def stars(num_stars):
 	output = ""
@@ -55,3 +51,6 @@ def round_fixed(input, num_places):
 
 def spaces(num_spaces):
 	return " "*num_spaces
+
+async def send_usage(command, ctx):
+	await ctx.channel.send("Unknown syntax. Usage: `"+ctx.prefix+command.name+" "+command.usage+"`")

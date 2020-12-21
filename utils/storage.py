@@ -34,14 +34,14 @@ class Storage:
 			output.append(new_row)
 		return output
 
-	def fetch_all_channels(self):
-		return self.execute("SELECT * FROM channels")
+	def fetch_all_aliases(self):
+		return self.execute("SELECT * FROM aliases")
 
-	def link_channel(self, snowflake: int, prefix: str, clan: str):
-		self.execute("INSERT INTO channels (snowflake, prefix, clan, last_used) VALUES (%s, %s, %s, current_date)", [snowflake, prefix, clan])
+	def link_guild(self, snowflake: int, alias: str, clan: str):
+		self.execute("INSERT INTO aliases (snowflake, alias, clan, last_used) VALUES (%s, %s, %s, current_date)", [snowflake, alias, clan])
 
-	def unlink_channel(self, snowflake: int, prefix: str):
-		self.execute("DELETE FROM channels WHERE snowflake = %s AND prefix = %s", [snowflake, prefix])
+	def unlink_guild(self, snowflake: int, alias: str):
+		self.execute("DELETE FROM aliases WHERE snowflake = %s AND alias = %s", [snowflake, alias])
 
-	def update_last_used(self, snowflake: int, prefix: str):
-		self.execute("UPDATE channels SET last_used = current_date WHERE snowflake = %s AND prefix = %s", [snowflake, prefix])
+	def update_last_used(self, snowflake: int, alias: str):
+		self.execute("UPDATE aliases SET last_used = current_date WHERE snowflake = %s AND alias = %s", [snowflake, alias])

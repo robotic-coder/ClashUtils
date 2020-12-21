@@ -14,12 +14,12 @@ load_dotenv()
 class ClashUtilsBot(discord.ext.commands.Bot):
 	def __init__(self):
 		super().__init__(
-			command_prefix=self.check_prefix,
-			activity=discord.Activity(type=discord.ActivityType.watching, name="for @ClashUtils help")
+			command_prefix="//",
+			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
 		)
 		extensions = [
 			"commands.admin",
-			#"commands.channel_link_manager",
+			"commands.alias_manager",
 			"commands.current_war_map",
 			"commands.cwl_roster",
 			"commands.damage_calculation",
@@ -39,11 +39,11 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 
 		self.storage = Storage()
 
-		self.linked_channels = {}
-		channels = self.storage.fetch_all_channels()
-		for c in channels: 
-			del c["last_used"]
-			self.link_channel(c["snowflake"], c["prefix"], c["clan"])
+		self.aliases = {}
+		aliases = self.storage.fetch_all_aliases()
+		for i in aliases:
+			del i["last_used"]
+			self.link_guild(i["snowflake"], i["alias"], i["clan"])
 
 	async def on_ready(self):
 		print("Logged in as "+str(self.user))
@@ -68,21 +68,15 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		permissions = ctx.channel.permissions_for(ctx.me)
 		return [p for p in ctx.command.required_permissions if getattr(permissions, p) == False]
 
-	def link_channel(self, snowflake, prefix, clan):
-		if snowflake not in self.linked_channels:
-			self.linked_channels[snowflake] = {}
-		self.linked_channels[snowflake][prefix] = clan
+	def link_guild(self, snowflake, alias, clan):
+		if snowflake not in self.aliases:
+			self.aliases[snowflake] = {}
+		self.aliases[snowflake][alias] = clan
 
-	def unlink_channel(self, snowflake, prefix):
-		del self.linked_channels[snowflake][prefix]
-		if len(self.linked_channels[snowflake].items()) == 0:
-			del self.linked_channels[snowflake]
-
-	async def check_prefix(self, bot, message):
-		ping = ["<@786654276185096203> ", "<@!786654276185096203> "]
-		if message.channel.id in self.linked_channels:
-			return list(self.linked_channels[message.channel.id].keys()) + ping
-		else: return ping
+	def unlink_guild(self, snowflake, alias):
+		del self.aliases[snowflake][alias]
+		if len(self.aliases[snowflake].items()) == 0:
+			del self.aliases[snowflake]
 
 bot = ClashUtilsBot()
 bot.run(os.environ["DISCORD_TOKEN"])

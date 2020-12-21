@@ -6,7 +6,10 @@ import commands.utils.emojis as emojis
 
 @discord.ext.commands.command()
 async def maxscore(ctx: discord.ext.commands.Context, *args):
-	(tag, params) = resolve_clan(ctx)
+	if len(args) != 1:
+		return
+
+	tag = resolve_clan(args[0], ctx)
 	clash = ctx.bot.clash
 	
 	if tag is not None:
@@ -77,7 +80,7 @@ def sort_bases(base):
 
 def setup(bot: discord.ext.commands.Bot):
 	maxscore.help = "Calculates the maximum possible scores in a clan war."
-	maxscore.usage = "maxscore [#CLANTAG]"
-	setattr(maxscore, "example", "maxscore #8PQGQC8")
+	maxscore.usage = "[#CLANTAG or alias]"
+	setattr(maxscore, "example", "#8PQGQC8")
 	setattr(maxscore, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(maxscore)

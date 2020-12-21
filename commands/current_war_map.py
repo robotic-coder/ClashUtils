@@ -9,14 +9,17 @@ import commands.utils.emojis as emojis
 
 @discord.ext.commands.command()
 async def currentwar(ctx: discord.ext.commands.Context, *args):
-	(tag, params) = resolve_clan(ctx)
+	if len(args) < 1 or len(args) > 2:
+		return
+
+	tag = resolve_clan(args[0], ctx)
 	clash = ctx.bot.clash
 	
 	if tag is not None:
 		async with ctx.channel.typing():
 			war = await clash.get_current_war(tag)
 			if war.state != "notInWar":
-				show_names = len(params) == 1 and params[0] == "full"
+				show_names = len(args) == 2 and args[1] == "full"
 				if war.type == "cwl": max_attacks = 1
 				else: max_attacks = 2
 				embed = discord.Embed(title=war.clan.name+" vs "+war.opponent.name)
@@ -103,8 +106,8 @@ def get_time_delta(start=datetime.utcnow(), end=datetime.utcnow()):
 	return output
 
 def setup(bot: discord.ext.commands.Bot):
-	currentwar.help = "Shows the current war for the given clan. If no clan is given, the linked clan will be used."
-	currentwar.usage = "currentwar [#CLANTAG]"
-	setattr(currentwar, "example", "currentwar #8PQGQC8")
+	currentwar.help = "Shows the current war for the given clan."
+	currentwar.usage = "[#CLANTAG or alias]"
+	setattr(currentwar, "example", "#8PQGQC8")
 	setattr(currentwar, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(currentwar)
