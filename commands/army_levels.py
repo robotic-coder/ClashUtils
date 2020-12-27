@@ -7,7 +7,8 @@ import commands.utils.emojis as emojis
 army_levels = None
 
 @discord.ext.commands.command(
-	brief = "Shows all members' levels for a specific army unit in the given clan.",
+	description = "Displays all clan members' levels for a specific army unit.",
+	brief = "Displays all members' levels for a specific army unit in the given clan.",
 	usage = "[#CLANTAG or alias] [unit name]",
 	help = "#8PQGQC8 sneaky goblin"
 )

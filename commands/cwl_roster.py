@@ -7,6 +7,7 @@ import commands.utils.emojis as emojis
 hero_names = [ "Barbarian King", "Archer Queen", "Grand Warden", "Royal Champion" ]
 
 @discord.ext.commands.command(
+	description = "Displays a clan's CWL roster.",
 	brief = "Displays the CWL roster for the given clan.",
 	usage = "[#CLANTAG or alias]",
 	help = "#8PQGQC8"

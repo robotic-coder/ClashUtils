@@ -8,7 +8,8 @@ class Alias(commands.Cog):
 		self.bot = bot
 
 	@commands.group(
-		brief = "Manage aliases that can be used in place of clan tags."
+		description = "Manages aliases that can be used in place of clan tags.",
+		brief = "Manages aliases that can be used in place of clan tags."
 	)
 	async def alias(self, ctx: commands.Context):
 		if ctx.invoked_subcommand is None:
@@ -17,6 +18,7 @@ class Alias(commands.Cog):
 
 	@alias.command(
 		name="add",
+		description = "Adds a clan alias to this server.",
 		brief = "Links the given alias to the given clan. When linked, you can run commands in this server with the alias instead of the clan tag.",
 		usage = "[#CLANTAG] [alias]",
 		help = "#8PQGQC8 myclan"
@@ -52,6 +54,7 @@ class Alias(commands.Cog):
 
 	@alias.command(
 		name="remove",
+		description = "Removes an alias from this server.",
 		brief = "Removes the given alias from this server. You must use a previously-linked alias.",
 		usage = "[alias]",
 		help = "myclan"

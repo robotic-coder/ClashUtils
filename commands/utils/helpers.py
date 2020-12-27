@@ -81,21 +81,20 @@ async def send_command_help(ctx, command, using_help_command=False):
 
 
 async def send_command_list(ctx, command_holder, using_help_command=False):
+	embed = discord.Embed()
 	if isinstance(command_holder, discord.ext.commands.Group):
-		title = command_holder.name
+		embed.title = command_holder.name
+		embed.description = command_holder.brief
 	else:
-		title = "ClashUtils Help"
+		embed.title = "ClashUtils Help"
+	embed.set_footer(text="Use "+ctx.prefix+"help [command] to view more information about a specific command.")
 
-	embed = discord.Embed(title=title, description="")
 	for command in sorted([cmd for cmd in command_holder.commands if not cmd.hidden], key=lambda cmd: cmd.name):
 		if not command.hidden:
 			if isinstance(command, discord.ext.commands.Group):
-				subcommands = ", ".join([cmd.name for cmd in command.commands if not cmd.hidden])
-				embed.description += "**"+ctx.prefix+command.qualified_name+"** *"+subcommands+" ...*\n"+command.brief+"\n"
-			else:
-				usage = command.usage
-				if usage != "": usage = "*"+usage+"*"
-				embed.description += "**"+ctx.prefix+command.qualified_name+"** "+usage+"\n"+command.brief+"\n"
+				subcommands = " *("+", ".join([cmd.name for cmd in command.commands if not cmd.hidden])+")*"
+			else: subcommands = ""
+			embed.add_field(name=command.qualified_name+subcommands, value=command.description, inline=False)
 	if using_help_command:
 		await ctx.send(embed=embed)
 	else:

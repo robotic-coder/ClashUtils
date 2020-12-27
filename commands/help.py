@@ -3,6 +3,7 @@ import discord.ext.commands
 from commands.utils.helpers import *
 
 @discord.ext.commands.command(
+	description = "Displays information about commands.",
 	brief = "Shows this message, or more information about a specific command.",
 	usage = "[command]",
 	help = "damage"

@@ -2,6 +2,7 @@ import discord
 import discord.ext.commands
 
 @discord.ext.commands.command(
+	description = "Sends a link that can be used to add me to a server.",
 	brief = "Sends a link that can be used to add me to a server.",
 	usage = "",
 	help = ""

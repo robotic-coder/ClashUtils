@@ -5,7 +5,8 @@ from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 
 @discord.ext.commands.command(
-	brief = "Calculates the maximum possible scores in a clan war.",
+	description = "Calculates the maximum possible scores in a clan's current war.",
+	brief = "Calculates the maximum possible scores in a clan's current war.",
 	usage = "[#CLANTAG or alias]",
 	help = "#8PQGQC8"
 )

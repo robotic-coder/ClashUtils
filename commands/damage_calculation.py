@@ -9,7 +9,8 @@ lightning_damage = ( 150, 180, 210, 240, 270, 320, 400, 480, 560 )
 shield_damage = ( 1260, 1460, 1660, 1860, 1960 )
 
 @discord.ext.commands.command(
-	brief = "Calculates damage from lightning/earthquake spells and the Royal Champion's Seeking Shield ability.",
+	description = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
+	brief = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
 	usage = "[building hp] [qty]x [item][level], [qty]x [item][level]...",
 	help = "4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9"
 )

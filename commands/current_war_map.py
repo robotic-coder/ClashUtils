@@ -8,7 +8,8 @@ import commands.utils.emojis as emojis
 
 
 @discord.ext.commands.command(
-	brief = "Shows the current war for the given clan.",
+	description = "Displays a clan's current war.",
+	brief = "Displays the current war for the given clan.",
 	usage = "[#CLANTAG or alias]",
 	help = "#8PQGQC8"
 )
