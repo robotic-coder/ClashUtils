@@ -6,7 +6,7 @@ from commands.utils.helpers import *
 	description = "Displays information about commands.",
 	brief = "Shows this message, or more information about a specific command.",
 	usage = "[command]",
-	help = "damage"
+	help = "alias add"
 )
 async def help(ctx: discord.ext.commands.Context, *args):
 	await send_help(ctx, ctx.bot, *args)
