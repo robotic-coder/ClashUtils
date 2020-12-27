@@ -41,7 +41,7 @@ async def levels(ctx: discord.ext.commands.Context, *args):
 
 		members = []
 		async for player in clan.get_detailed_members():
-			search = [u for u in getattr(player, unit.type) if u.name == unit.name or (u.name == unit.base.name and u.level >= unit.min and player.town_hall >= 11)]
+			search = [u for u in getattr(player, unit.type) if u.name == unit.name or (unit.base is not None and u.name == unit.base.name and u.level >= unit.min and player.town_hall >= 11)]
 			if len(search) > 0:
 				members.append({
 					"account": player,
@@ -62,6 +62,8 @@ async def levels(ctx: discord.ext.commands.Context, *args):
 		else: min = ""
 		embed.title = unit.name+" Levels ("+min+"max "+str(unit.max)+") in "+clan.name
 
+		if len(lines) == 0:
+			lines.append("no members have it unlocked \:(")
 		await send_lines_in_embed(ctx.channel, lines, embed)
 
 class ArmyUnit:
@@ -109,7 +111,6 @@ async def get_army_details(clash: coc.Client, unit_name: str):
 	if unit_name.lower() in army_levels:
 		return army_levels[unit_name.lower()]
 	else:
-		print("no "+unit_name.lower())
 		return None
 
 def setup(bot: discord.ext.commands.Bot):
