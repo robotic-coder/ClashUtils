@@ -20,6 +20,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		extensions = [
 			"commands.admin",
 			"commands.alias_manager",
+			"commands.army_levels",
 			"commands.current_war_map",
 			"commands.cwl_roster",
 			"commands.damage_calculation",
@@ -45,6 +46,13 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			del i["last_used"]
 			self.link_guild(i["snowflake"], i["alias"], i["clan"])
 
+		self.desired_permissions = [
+			"send_messages",
+			"attach_files",
+			"embed_links",
+			"use_external_emojis"
+		]
+
 	async def on_ready(self):
 		print("Logged in as "+str(self.user))
 		emojis.setup(self)
@@ -65,8 +73,9 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			await ctx.channel.send("I am missing the following permission(s) in this channel:```\n"+"\n".join(missing_permissions)+"```")
 	
 	def find_missing_permissions(self, ctx: discord.ext.commands.Context):
+		
 		permissions = ctx.channel.permissions_for(ctx.me)
-		return [p for p in ctx.command.required_permissions if getattr(permissions, p) == False]
+		return [p for p in self.desired_permissions if getattr(permissions, p) == False]
 
 	def link_guild(self, snowflake, alias, clan):
 		if snowflake not in self.aliases:

@@ -4,26 +4,31 @@ import coc
 from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 
-@discord.ext.commands.command()
+@discord.ext.commands.command(
+	brief = "Calculates the maximum possible scores in a clan war.",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
 async def maxscore(ctx: discord.ext.commands.Context, *args):
 	if len(args) != 1:
+		await send_command_help(ctx, maxscore)
 		return
 
 	tag = resolve_clan(args[0], ctx)
 	clash = ctx.bot.clash
 	
-	if tag is not None:
-		async with ctx.channel.typing():
-			war = await clash.get_current_war(tag)
-			if war.state != "notInWar":
-				await ctx.channel.send(embed=make_embed(war, "clan", "opponent"))
-				await ctx.channel.send(embed=make_embed(war, "opponent", "clan"))
+	if tag is None:
+		await send_command_help(ctx, maxscore)
+		return
 
-			else:
-				clan = await clash.get_clan(tag)
-				await ctx.channel.send(clan.name+" ("+tag+") is not in war.")
-	else:
-		await ctx.channel.send("format: `<@786654276185096203> roster #CLANTAG`")
+	async with ctx.channel.typing():
+		war = await clash.get_current_war(tag)
+		if war.state == "notInWar":
+			clan = await clash.get_clan(tag)
+			await ctx.channel.send(clan.name+" ("+tag+") is not in war.")
+
+		await ctx.channel.send(embed=make_embed(war, "clan", "opponent"))
+		await ctx.channel.send(embed=make_embed(war, "opponent", "clan"))
 
 def make_embed(war, friendly_name, enemy_name):
 	friendly_side: coc.WarClan = getattr(war, friendly_name)
@@ -79,8 +84,4 @@ def sort_bases(base):
 	return (stars, destruction, base.map_position*-1)
 
 def setup(bot: discord.ext.commands.Bot):
-	maxscore.help = "Calculates the maximum possible scores in a clan war."
-	maxscore.usage = "[#CLANTAG or alias]"
-	setattr(maxscore, "example", "#8PQGQC8")
-	setattr(maxscore, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(maxscore)

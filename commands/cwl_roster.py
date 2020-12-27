@@ -6,17 +6,21 @@ import commands.utils.emojis as emojis
 
 hero_names = [ "Barbarian King", "Archer Queen", "Grand Warden", "Royal Champion" ]
 
-@discord.ext.commands.command()
+@discord.ext.commands.command(
+	brief = "Displays the CWL roster for the given clan.",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
 async def roster(ctx: discord.ext.commands.Context, *args):
 	if len(args) < 1 or len(args) > 2:
-		await helpers.send_usage(roster, ctx)
+		await helpers.send_command_help(ctx, roster)
 		return
 
 	tag = helpers.resolve_clan(args[0], ctx)
 	clash = ctx.bot.clash
 	
 	if tag is None:
-		await helpers.send_usage(roster, ctx)
+		await helpers.send_command_help(ctx, roster)
 		return
 
 	try:
@@ -111,8 +115,4 @@ def generate_hero_levels(player):
 	#if member.town_hall
 
 def setup(bot: discord.ext.commands.Bot):
-	roster.help = "Displays the CWL roster for the given clan."
-	roster.usage = "[#CLANTAG or alias]"
-	setattr(roster, "example", "#8PQGQC8")
-	setattr(roster, "required_permissions", ["send_messages", "embed_links", "use_external_emojis"])
 	bot.add_command(roster)
