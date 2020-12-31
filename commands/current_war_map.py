@@ -124,7 +124,7 @@ def setup(bot: discord.ext.commands.Bot):
 	slash = SlashCommand(bot, auto_register=True)
 	slash.add_slash_command(currentwar_slash,
 		name="currentwar",
-		guild_ids=[738656460430377013],
+		#guild_ids=[738656460430377013],
 		options=[{
 			"type": 3,
 			"name": "clan",
