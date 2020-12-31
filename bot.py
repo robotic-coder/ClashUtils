@@ -18,6 +18,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
 		)
 		extensions = [
+			#"commands.about",
 			"commands.admin",
 			"commands.alias_manager",
 			"commands.army_levels",
