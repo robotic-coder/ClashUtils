@@ -22,6 +22,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			"commands.alias_manager",
 			"commands.army_levels",
 			"commands.current_war_map",
+			"commands.cwl_performance",
 			"commands.cwl_roster",
 			"commands.damage_calculation",
 			"commands.invite",
