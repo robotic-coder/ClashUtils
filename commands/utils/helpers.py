@@ -92,7 +92,7 @@ async def send_command_list(ctx, command_holder, using_help_command=False):
 	for command in sorted([cmd for cmd in command_holder.commands if not cmd.hidden], key=lambda cmd: cmd.name):
 		if not command.hidden:
 			if isinstance(command, discord.ext.commands.Group):
-				subcommands = " *("+", ".join([cmd.name for cmd in command.commands if not cmd.hidden])+")*"
+				subcommands = " *("+", ".join([cmd.name for cmd in sorted(command.commands, key=lambda cmd: cmd.name) if not cmd.hidden])+")*"
 			else: subcommands = ""
 			embed.add_field(name=command.qualified_name+subcommands, value=command.description, inline=False)
 	if using_help_command:
