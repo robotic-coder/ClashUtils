@@ -3,4 +3,4 @@ discord.py
 python-dotenv
 psycopg2
 heroku3
-discord-py-slash-command
+discord-py-slash-command==1.0.7
