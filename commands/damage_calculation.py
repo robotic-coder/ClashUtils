@@ -76,8 +76,8 @@ async def damage(ctx: discord.ext.commands.Context, *args):
 	if float(total_damage) >= float(building_hp): marker = "✅"
 	else: marker = "❌"
 
-	embed.title = "Damage Calculation: "+round_fixed(total_damage, 2)+" points "+marker
-	await ctx.channel.send(embed=embed)
+	embed.title = "Damage Calculation"
+	await ctx.channel.send("Total: "+round_fixed(total_damage, 2)+" points "+marker, embed=embed)
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(damage)

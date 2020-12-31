@@ -35,7 +35,6 @@ async def currentwar(ctx: discord.ext.commands.Context, *args):
 		show_names = len(args) == 2 and args[1] == "full"
 		if war.type == "cwl": max_attacks = 1
 		else: max_attacks = 2
-		embed = discord.Embed(title=war.clan.name+" vs "+war.opponent.name)
 		
 		bases = []
 		for i in range(war.team_size):
@@ -45,23 +44,27 @@ async def currentwar(ctx: discord.ext.commands.Context, *args):
 			bases.append(base)
 
 		if war.state == "preparation":
-			status = "starting in "+get_time_delta(war.start_time.now, war.start_time.time)
+			status = "Starting in "+get_time_delta(war.start_time.now, war.start_time.time)
 			print(war.start_time)
 		elif war.state == "inWar":
 			status = get_time_delta(war.end_time.now, war.end_time.time)+" remaining"
 		elif war.state == "warEnded":
-			status = "ended "+get_time_delta(war.end_time.time, war.end_time.now)+" ago"
+			status = "Ended "+get_time_delta(war.end_time.time, war.end_time.now)+" ago"
 		else:
-			status = "unknown status"
+			status = "Unknown status"
 
-		lines = [
+		embed = discord.Embed(title="War Map")
+		embed.set_footer(text=status)
+
+		content = "\n".join([
+			"**"+war.clan.name+"** vs **"+war.opponent.name+"**",
 			"`Stars             "+pad_left(war.clan.stars, 3)+" - "+pad_right(war.opponent.stars, 3)+spaces(4)+"`",
 			"`Destruction   "+pad_left(round_fixed(war.clan.destruction, 2)+"%", 7)+" - "+pad_right(round_fixed(war.opponent.destruction, 2)+"%", 7)+"`",
 			"`Attacks Used      "+pad_left(war.clan.attacks_used, 3)+" - "+pad_right(war.opponent.attacks_used, 3)+spaces(4)+"`",
-			"`Attacks Remaining "+pad_left(max_attacks*war.team_size-war.clan.attacks_used, 3)+" - "+pad_right(max_attacks*war.team_size-war.opponent.attacks_used, 3)+spaces(4)+"`",
-			"",
-			"**War Map** - "+status
-		]
+			"`Attacks Remaining "+pad_left(max_attacks*war.team_size-war.clan.attacks_used, 3)+" - "+pad_right(max_attacks*war.team_size-war.opponent.attacks_used, 3)+spaces(4)+"`"
+		])
+
+		lines = []
 		for index, base in enumerate(bases):
 			clan_name = ""
 			clan_stars = 0
@@ -94,7 +97,7 @@ async def currentwar(ctx: discord.ext.commands.Context, *args):
 			enemy_line = enemy_attacks+"`"+str(emojis.th[enemy_th])+" "+stars(enemy_stars)+" `"+pad_right(enemy_dest, 4)+enemy_name+"`"
 			lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 		
-		await send_lines_in_embed(ctx.channel, lines, embed)
+		await send_lines_in_embed(ctx.channel, lines, embed, content)
 
 def get_time_delta(start, end):
 	delta = end-start
