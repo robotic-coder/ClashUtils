@@ -64,7 +64,7 @@ async def levels(ctx: discord.ext.commands.Context, *args):
 		embed.title = unit.name+" Levels ("+min+"max "+str(unit.max)+") in "+clan.name
 
 		if len(lines) == 0:
-			lines.append("no members have it unlocked \:(")
+			lines.append("no members have this unit unlocked \:(")
 		await send_lines_in_embed(ctx.channel, lines, embed)
 
 class ArmyUnit:
