@@ -127,7 +127,7 @@ def get_time_delta(start, end):
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
 
-	slash = SlashCommand(bot, auto_register=True)
+	slash = SlashCommand(bot, auto_register=True, auto_delete=True)
 	slash.add_slash_command(currentwar_slash,
 		name="currentwar",
 		#guild_ids=[738656460430377013],
