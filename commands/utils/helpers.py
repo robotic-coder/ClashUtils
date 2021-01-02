@@ -35,13 +35,15 @@ def generate_embeds(lines: list, embed=discord.Embed()):
 		return [embed]
 
 async def send_embeds_in_multiple_messages(channel, embeds, first_message_content=""):
-	message = await channel.send(first_message_content, embed=embeds.pop(0))
 	if len(embeds) > 0:
+		message = await channel.send(first_message_content, embed=embeds.pop(0))
 		output = await send_embeds_in_multiple_messages(channel, embeds)
-		output.append(message)
-		return output
-	else:
+		return [message]+output
+	elif len(first_message_content) > 0:
+		message = await channel.send(first_message_content)
 		return [message]
+	else:
+		return []
 
 def resolve_clan(tag_or_alias, ctx):
 	if tag_or_alias.startswith("#"):

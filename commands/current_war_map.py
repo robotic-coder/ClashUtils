@@ -32,6 +32,12 @@ async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
 		
 async def currentwar(tag, show_names, clash):
 	war = await clash.get_current_war(tag)
+	if war is None: war = await clash.get_current_war(tag, cwl_round=coc.WarRound.current_preparation)
+	if war is None: war = await clash.get_current_war(tag, cwl_round=coc.WarRound.previous_war)
+	if war is None:
+		clan = await clash.get_clan(tag)
+		return ([], clan.name+" ("+tag+") has a private war log.")
+	
 	if war.state == "notInWar":
 		clan = await clash.get_clan(tag)
 		return ([], clan.name+" ("+tag+") is not in war.")
