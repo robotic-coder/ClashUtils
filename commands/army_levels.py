@@ -129,7 +129,7 @@ def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(levels_standard)
 	bot.slash.add_slash_command(levels_slash,
 		name="levels",
-		description="Displays the war status for the given clan.",
+		description="Displays all members' levels for a specific army unit in the given clan",
 		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
