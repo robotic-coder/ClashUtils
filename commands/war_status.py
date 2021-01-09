@@ -193,11 +193,10 @@ def get_time_delta(start, end):
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
 
-	slash = SlashCommand(bot, auto_register=True, auto_delete=True)
-	slash.add_slash_command(currentwar_slash,
+	bot.slash.add_slash_command(currentwar_slash,
 		name="currentwar",
 		description="Displays the war status for the given clan.",
-		#guild_ids=[738656460430377013],
+		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
 			"name": "clan",
@@ -237,6 +236,10 @@ async def currentwar_slash(ctx: SlashContext, clan, cwl_round=None, size="compac
 	if tag is None:
 		#await send_command_help(ctx, currentwar_standard)
 		return
+
+	if cwl_round == "full" or cwl_round == "compact":
+		size = cwl_round
+		cwl_round = None
 
 	(embeds, content) = await currentwar(tag, cwl_round, size == "full", clash)
 	await ctx.send(content=content, embeds=embeds)

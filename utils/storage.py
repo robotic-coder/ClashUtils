@@ -1,14 +1,14 @@
-import os
 import psycopg2
 import psycopg2.sql as sql
 
 class Storage:
-	def __init__(self):
+	def __init__(self, url):
 		self.connection = None
+		self.database_url = url
 		self.connect()
 
 	def connect(self):
-		self.connection = psycopg2.connect(os.environ["DATABASE_URL"])
+		self.connection = psycopg2.connect(self.database_url)
 		self.connection.autocommit = True
 
 	def get_cursor(self):

@@ -7,6 +7,7 @@ import discord.ext.commands
 import commands.utils.emojis as emojis
 from commands.easter_eggs import easter_eggs
 from utils.storage import Storage
+from discord_slash import SlashCommand, SlashContext
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,6 +18,11 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			command_prefix="//",
 			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
 		)
+
+		self.slash = SlashCommand(self, auto_register=True, auto_delete=True)
+		if os.environ == "live": self.command_guild_ids = None
+		else: self.command_guild_ids = [738656460430377013]
+
 		extensions = [
 			#"commands.about",
 			"commands.admin",
@@ -40,7 +46,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			key_count=2
 		)
 
-		self.storage = Storage()
+		self.storage = Storage(os.environ["DATABASE_URL"])
 
 		self.aliases = {}
 		aliases = self.storage.fetch_all_aliases()
@@ -60,7 +66,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		emojis.setup(self)
 	
 	async def on_message(self, message):
-		if message.author.bot: return	
+		if message.author.bot: return
 		if os.environ["ENVIRONMENT"] == "dev" and message.author.id != 411964699429568513: return
 		if await easter_eggs(self, message): return
 		
