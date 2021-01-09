@@ -3,13 +3,13 @@ import discord.ext.commands
 import coc
 import re
 
-def pad_left(data, desired_length):
+def pad_left(data, desired_length, char=" "):
 	data = str(data)
-	return spaces(desired_length-len(data))+data
+	return repeat(char, desired_length-len(data))+data
 
-def pad_right(data, desired_length):
+def pad_right(data, desired_length, char=" "):
 	data = str(data)
-	return data+spaces(desired_length-len(data))
+	return data+repeat(char, desired_length-len(data))
 
 async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=discord.Embed(), first_message_content=""):
 	embeds = generate_embeds(lines, embed)
@@ -72,8 +72,11 @@ def stars(num_stars):
 def round_fixed(input, num_places):
 	return ("{:."+str(num_places)+"f}").format(round(input, num_places))
 
+def repeat(char, num_repeats):
+	return char*num_repeats
+
 def spaces(num_spaces):
-	return " "*num_spaces
+	return repeat(" ", num_spaces)
 
 async def send_usage(command, ctx):
 	await ctx.channel.send("Unknown syntax. Usage: `"+ctx.prefix+command.name+" "+command.usage+"`")
