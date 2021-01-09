@@ -19,25 +19,8 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
 		)
 
-		self.slash = SlashCommand(self, auto_register=True, auto_delete=True)
-		if os.environ == "live": self.command_guild_ids = None
+		if os.environ["ENVIRONMENT"] == "live": self.command_guild_ids = None
 		else: self.command_guild_ids = [738656460430377013]
-
-		extensions = [
-			#"commands.about",
-			"commands.admin",
-			"commands.alias_manager",
-			"commands.army_levels",
-			"commands.cwl_performance",
-			"commands.cwl_roster",
-			"commands.damage_calculation",
-			"commands.invite",
-			"commands.help",
-			"commands.max_war_score",
-			"commands.war_status"
-		]
-		for extension in extensions:
-			self.load_extension(extension)
 
 		self.clash = coc.login(
 			os.environ["CLASH_EMAIL"],
@@ -64,6 +47,23 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 	async def on_ready(self):
 		print("Logged in as "+str(self.user))
 		emojis.setup(self)
+		self.slash = SlashCommand(self, auto_register=True, auto_delete=True)
+
+		extensions = [
+			#"commands.about",
+			"commands.admin",
+			"commands.alias_manager",
+			"commands.army_levels",
+			"commands.cwl_performance",
+			"commands.cwl_roster",
+			"commands.damage_calculation",
+			"commands.invite",
+			"commands.help",
+			"commands.max_war_score",
+			"commands.war_status"
+		]
+		for extension in extensions:
+			self.load_extension(extension)
 	
 	async def on_message(self, message):
 		if message.author.bot: return
