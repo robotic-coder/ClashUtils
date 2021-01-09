@@ -194,7 +194,7 @@ def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
 
 	bot.slash.add_slash_command(currentwar_slash,
-		name="currentwar",
+		name=bot.slash_command_prefix+"currentwar",
 		description="Displays the war status for the given clan.",
 		guild_ids=bot.command_guild_ids,
 		options=[{

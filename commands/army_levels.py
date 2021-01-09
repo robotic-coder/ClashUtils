@@ -128,7 +128,7 @@ async def init_army_details(clash: coc.Client):
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(levels_standard)
 	bot.slash.add_slash_command(levels_slash,
-		name="levels",
+		name=bot.slash_command_prefix+"levels",
 		description="Displays all members' levels for a specific army unit in the given clan",
 		guild_ids=bot.command_guild_ids,
 		options=[{

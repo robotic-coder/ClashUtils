@@ -19,8 +19,12 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
 		)
 
-		if os.environ["ENVIRONMENT"] == "live": self.command_guild_ids = None
-		else: self.command_guild_ids = [738656460430377013]
+		if os.environ["ENVIRONMENT"] == "live":
+			self.command_guild_ids = None
+			self.slash_command_prefix = ""
+		else:
+			self.command_guild_ids = [738656460430377013]
+			self.slash_command_prefix = "dev-"
 
 		self.clash = coc.login(
 			os.environ["CLASH_EMAIL"],

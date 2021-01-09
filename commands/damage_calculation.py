@@ -85,7 +85,7 @@ def damage(building_hp, spell_list):
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(damage_standard)
 	bot.slash.add_slash_command(damage_slash,
-		name="damage",
+		name=bot.slash_command_prefix+"damage",
 		description="Calculates damage from Lightning/Earthquake Spells and the Royal Champion's Seeking Shield",
 		guild_ids=bot.command_guild_ids,
 		options=[{
