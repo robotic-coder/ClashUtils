@@ -84,6 +84,7 @@ class Performance(discord.ext.commands.Cog):
 					lines.append("\u2066`"+rank+" "+star_score+"  "+destruction_score+" "+marker+member.name+"`")
 			
 			embed = discord.Embed(title=stats["clan_name"]+": CWL Net Gain after "+str(stats["num_rounds"])+" rounds")
+			embed.set_footer(text=tag)
 			await send_lines_in_embed(ctx.channel, lines, embed=embed)
 
 	@performance.command(
