@@ -37,6 +37,9 @@ class Storage:
 	def fetch_all_aliases(self):
 		return self.execute("SELECT * FROM aliases")
 
+	def fetch_guild_aliases(self, snowflake: int):
+		return self.execute("SELECT alias, clan FROM aliases WHERE snowflake = %s ORDER BY alias ASC", [snowflake])
+
 	def link_guild(self, snowflake: int, alias: str, clan: str):
 		self.execute("INSERT INTO aliases (snowflake, alias, clan, last_used) VALUES (%s, %s, %s, current_date)", [snowflake, alias, clan])
 

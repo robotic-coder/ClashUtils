@@ -1,6 +1,7 @@
 import discord
 import discord.ext.commands as commands
 import coc
+import psycopg2
 from commands.utils.helpers import *
 
 class Alias(commands.Cog):
@@ -45,9 +46,13 @@ class Alias(commands.Cog):
 			return
 			
 		clan = await clash.get_clan(tag)
-		ctx.bot.link_guild(snowflake, alias, tag)
-		ctx.bot.storage.link_guild(snowflake, alias, tag)
-		await ctx.channel.send("You have linked `"+alias+"` to "+clan.name+" in this server.")
+		try:
+			ctx.bot.storage.link_guild(snowflake, alias, tag)
+			ctx.bot.link_guild(snowflake, alias, tag)
+			await ctx.channel.send("You have linked `"+alias+"` to "+clan.name+" in this server.")
+		except psycopg2.Error:
+			await ctx.channel.send(clan.name+" is already linked to another alias in this server.")
+			
 
 		channels = ctx.bot.storage.fetch_all_aliases()
 		print(channels)
@@ -81,6 +86,28 @@ class Alias(commands.Cog):
 
 		channels = ctx.bot.storage.fetch_all_aliases()
 		print(channels)
+
+	@alias.command(
+		name="list",
+		description = "Displays all clan aliases in this server.",
+		brief = "Displays all clan aliases in this server.",
+		usage = "",
+		help = ""
+	)
+	async def alias_list(self, ctx: commands.Context, *args):
+		if len(args) > 0:
+			await send_command_help(ctx, self.alias_list)
+			return
+
+		aliases = ctx.bot.storage.fetch_guild_aliases(ctx.guild.id)
+		clans = await ctx.bot.clash.get_clans([a["clan"] for a in aliases]).flatten()
+		lines = []
+		for i in range(len(clans)):
+			lines.append("`"+aliases[i]["alias"]+"` - "+clans[i].name+" ("+clans[i].tag+")")
+
+		embed = discord.Embed(title="Clan Tag Aliases")
+		embed.set_author(name=ctx.guild.name)
+		await send_lines_in_embed(ctx.channel, lines, embed)
 
 def setup(bot: commands.Bot):
 	bot.add_cog(Alias(bot))
