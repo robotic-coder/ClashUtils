@@ -44,7 +44,13 @@ class Performance(discord.ext.commands.Cog):
 					m.num_attacks-m.num_rounds,
 					m.town_hall_level
 				)
+			
 			stats = await self.get_stats(tag, clash)
+			if stats is None:
+				clan = await clash.get_clan(tag)
+				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+				return
+				
 			members = sorted(stats["members"], key=sort, reverse=True)
 
 			lines = []
@@ -115,6 +121,11 @@ class Performance(discord.ext.commands.Cog):
 					m.town_hall_level
 				)
 			stats = await self.get_stats(tag, clash)
+			if stats is None:
+				clan = await clash.get_clan(tag)
+				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+				return
+				
 			members = sorted(stats["members"], key=sort, reverse=True)
 
 			lines = []
@@ -182,6 +193,11 @@ class Performance(discord.ext.commands.Cog):
 					m.town_hall_level
 				)
 			stats = await self.get_stats(tag, clash)
+			if stats is None:
+				clan = await clash.get_clan(tag)
+				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+				return
+
 			members = sorted(stats["members"], key=sort, reverse=True)
 
 			lines = []
@@ -240,49 +256,49 @@ class Performance(discord.ext.commands.Cog):
 		def destruction_score(self): return self.attack_destruction - self.defence_destruction
 
 	async def get_stats(self, tag: str, clash: coc.Client):
-		group = await clash.get_league_group(tag)
-		if group is None:
+		try:
+			group = await clash.get_league_group(tag)
+			num_rounds = 0
+			members = {}
+			async for war in group.get_wars_for_clan(tag):
+				if war.state == "warEnded":
+					num_rounds += 1
+					lineup = war.clan.members
+					attacks = []
+					attacked_bases = {}
+					for member in lineup:
+						if member.tag not in members:
+							members[member.tag] = self.Member(member)
+						members[member.tag].num_rounds += 1
+						if len(member.attacks) > 0:
+							attacks.append(member.attacks[0])
+							attacked_bases[member.attacks[0].defender_tag] = {
+								"tag": member.attacks[0].defender_tag,
+								"stars": 0
+							}
+						if member.best_opponent_attack is not None:
+							members[member.tag].num_defenses += 1
+							members[member.tag].defence_stars += member.best_opponent_attack.stars
+							members[member.tag].defence_destruction += member.best_opponent_attack.destruction
+
+					attacks = sorted(attacks, key=lambda x: x.order)
+
+					for attack in attacks:
+						target = attacked_bases[attack.defender_tag]
+						member = members[attack.attacker_tag]
+						if attack.stars > target["stars"]:
+							member.attack_stars += attack.stars-target["stars"]
+							target["stars"] = attack.stars
+						member.attack_destruction += attack.destruction
+						member.num_attacks += 1
+					
+			return {
+				"members": members.values(),
+				"clan_name": [clan.name for clan in group.clans if clan.tag == tag][0],
+				"num_rounds": num_rounds
+			}
+		except coc.errors.NotFound:
 			return None
-		
-		num_rounds = 0
-		members = {}
-		async for war in group.get_wars_for_clan(tag):
-			if war.state == "warEnded":
-				num_rounds += 1
-				lineup = war.clan.members
-				attacks = []
-				attacked_bases = {}
-				for member in lineup:
-					if member.tag not in members:
-						members[member.tag] = self.Member(member)
-					members[member.tag].num_rounds += 1
-					if len(member.attacks) > 0:
-						attacks.append(member.attacks[0])
-						attacked_bases[member.attacks[0].defender_tag] = {
-							"tag": member.attacks[0].defender_tag,
-							"stars": 0
-						}
-					if member.best_opponent_attack is not None:
-						members[member.tag].num_defenses += 1
-						members[member.tag].defence_stars += member.best_opponent_attack.stars
-						members[member.tag].defence_destruction += member.best_opponent_attack.destruction
-
-				attacks = sorted(attacks, key=lambda x: x.order)
-
-				for attack in attacks:
-					target = attacked_bases[attack.defender_tag]
-					member = members[attack.attacker_tag]
-					if attack.stars > target["stars"]:
-						member.attack_stars += attack.stars-target["stars"]
-						target["stars"] = attack.stars
-					member.attack_destruction += attack.destruction
-					member.num_attacks += 1
-				
-		return {
-			"members": members.values(),
-			"clan_name": [clan.name for clan in group.clans if clan.tag == tag][0],
-			"num_rounds": num_rounds
-		}
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_cog(Performance(bot))
