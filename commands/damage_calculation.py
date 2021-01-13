@@ -22,8 +22,8 @@ async def damage_standard(ctx: discord.ext.commands.Context, *args):
 		await send_command_help(ctx, damage_standard)
 		return
 	
-	(embed, content) = damage(params.group(1), params.group(2))
-	await ctx.channel.send(content, embed=embed)
+	(embeds, content) = damage(params.group(1), params.group(2))
+	await send_embeds_in_multiple_messages(ctx.channel, embeds, content)
 
 def damage(building_hp, spell_list):
 	total_damage = 0
