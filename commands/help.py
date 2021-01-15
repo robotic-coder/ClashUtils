@@ -21,7 +21,10 @@ async def send_help(ctx, command_holder, *args):
 		if isinstance(command, discord.ext.commands.Group):
 			await send_help(ctx, command, *args[1:])
 		else:
-			await send_command_help(ctx, command, True)
+			embed = get_command_help(ctx, command)
+			if command.name == "help":
+				await ctx.send("Yo dawg, I heard you liked `"+ctx.prefix+"help`. So I put `help` in `"+ctx.prefix+"help`, so you can learn to use `"+ctx.prefix+"help` while you use `"+ctx.prefix+"help`.", embed=embed)
+			else: await ctx.send(embed=embed)
 
 	else:
 		await ctx.send("I can't find that command 🤔")

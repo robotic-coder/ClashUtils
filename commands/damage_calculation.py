@@ -4,28 +4,18 @@ import re
 from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
+from commands.utils.responder import *
 
 earthquake_damage = ( 0.145, 0.17, 0.21, 0.25, 0.29 )
 lightning_damage = ( 150, 180, 210, 240, 270, 320, 400, 480, 560 )
 shield_damage = ( 1260, 1460, 1660, 1860, 1960 )
 
-@discord.ext.commands.command(
-	name = "damage",
-	description = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
-	brief = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
-	usage = "[building hp] [qty]x [item][level], [qty]x [item][level]...",
-	help = "4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9"
-)
-async def damage_standard(ctx: discord.ext.commands.Context, *args):
-	params = re.match("(\d+) (((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-5])))((, )|$))+)", " ".join(args))
-	if params is None:
-		await send_command_help(ctx, damage_standard)
-		return
+async def damage(resp: Responder, building_hp: str, spell_list: str):
+	print(spell_list)
+	spell_checker = re.match("^(((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-5])))((, )|$))+)", spell_list)
+	if spell_checker is None:
+		return await resp.send("Invalid syntax.\nExample: /damage **hp:** 4000 **items:** 1x earthquake5, 5x lightning9, 1x shield4")
 	
-	(embeds, content) = damage(params.group(1), params.group(2))
-	await send_embeds_in_multiple_messages(ctx.channel, embeds, content)
-
-def damage(building_hp, spell_list):
 	total_damage = 0
 	earthquake_count = 0
 	shield_count = 0
@@ -35,7 +25,7 @@ def damage(building_hp, spell_list):
 
 	spells = spell_list.split(", ")
 	if len(spells) >= 14:
-		return ([], "You can't use more than 14 spells!")
+		return await resp.send("You can't use more than 14 spells!")
 	
 	for spell in spells:
 		spell_params = re.match("^(\d+)x ([A-Za-z]*)(\d+)$", spell)
@@ -72,7 +62,7 @@ def damage(building_hp, spell_list):
 					damage = str(shield_damage[level-1])+" points"
 					embed.add_field(name=str(emojis.heroes["champion"])+" Seeking Shield level "+str(level), value=damage, inline=False)
 				else:
-					return ([], "You can't use Seeking Shield twice!")
+					return await resp.send("You can't use Seeking Shield twice!")
 	if earthquake_count > 1:
 		embed.set_footer(text="This result may be off by a few points, because the fine details of how Clash combines damage from multiple Earthquake Spells (for example, how much rounding is used) is unknown.")
 	
@@ -80,7 +70,24 @@ def damage(building_hp, spell_list):
 	else: marker = "❌"
 
 	embed.title = "Damage Breakdown"
-	return ([embed], "Total: "+round_fixed(total_damage, 2)+" points "+marker)
+	await resp.send("Total: "+round_fixed(total_damage, 2)+" points "+marker, [embed])
+
+
+
+
+@discord.ext.commands.command(
+	name = "damage",
+	description = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
+	brief = "Calculates damage from Lightning/Earthquake spells and the Royal Champion's Seeking Shield ability.",
+	usage = "[building hp] [qty]x [item][level], [qty]x [item][level]...",
+	help = "4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9"
+)
+async def damage_standard(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 3:
+		await send_command_help(ctx, damage_standard)
+		return
+	resp = StandardResponder(ctx)
+	await damage(resp, args[0], " ".join(args[1:]))
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(damage_standard)
@@ -103,7 +110,5 @@ def setup(bot: discord.ext.commands.Bot):
 	)
 
 async def damage_slash(ctx: SlashContext, building_hp, spells):
-	await ctx.send(content="Note: This feature is in beta, and not all `//` commands are supported yet.")
-	
-	(embeds, content) = damage(building_hp, spells)
-	await ctx.send(content=content, embeds=embeds)
+	resp = SlashResponder(ctx)
+	await damage(resp, building_hp, spells)

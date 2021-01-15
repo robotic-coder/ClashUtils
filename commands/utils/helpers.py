@@ -11,6 +11,7 @@ def pad_right(data, desired_length, char=" "):
 	data = str(data)
 	return data+repeat(char, desired_length-len(data))
 
+# to be removed
 async def send_lines_in_embed(channel: discord.TextChannel, lines: list, embed=discord.Embed(), first_message_content=""):
 	embeds = generate_embeds(lines, embed)
 	return await send_embeds_in_multiple_messages(channel, embeds, first_message_content)
@@ -34,6 +35,7 @@ def generate_embeds(lines: list, embed=discord.Embed()):
 	else:
 		return [embed]
 
+# to be removed
 async def send_embeds_in_multiple_messages(channel, embeds, first_message_content=""):
 	if len(embeds) > 0:
 		message = await channel.send(first_message_content, embed=embeds.pop(0))
@@ -45,6 +47,7 @@ async def send_embeds_in_multiple_messages(channel, embeds, first_message_conten
 	else:
 		return []
 
+# to be removed
 def resolve_clan(tag_or_alias, ctx):
 	if tag_or_alias.startswith("#"):
 		return tag_or_alias
@@ -55,6 +58,7 @@ def resolve_clan(tag_or_alias, ctx):
 		return ctx.bot.global_aliases[tag_or_alias]
 	else: return None
 
+# to be removed
 def resolve_clan_slash(tag_or_alias, ctx):
 	if tag_or_alias.startswith("#"):
 		return tag_or_alias
@@ -85,17 +89,19 @@ def spaces(num_spaces):
 async def send_usage(command, ctx):
 	await ctx.channel.send("Unknown syntax. Usage: `"+ctx.prefix+command.name+" "+command.usage+"`")
 
-
-async def send_command_help(ctx, command, using_help_command=False):
+def get_command_help(ctx, command):
+	if ctx is discord.ext.commands.Context:
+		prefix = ctx.prefix
+	else:
+		prefix = "/"
 	embed = discord.Embed(title=command.qualified_name, description=command.brief)
-	embed.add_field(name="Usage", value=ctx.prefix+command.qualified_name+" "+command.usage, inline=False)
-	embed.add_field(name="Example", value=ctx.prefix+command.qualified_name+" "+command.help, inline=False)
-	if using_help_command:
-		if command.name == "help":
-			await ctx.send("Yo dawg, I heard you liked `"+ctx.prefix+"help`. So I put `help` in `"+ctx.prefix+"help`, so you can learn to use `"+ctx.prefix+"help` while you use `"+ctx.prefix+"help`.", embed=embed)
-		else: await ctx.send(embed=embed)
-	else: await ctx.send("Please check your command syntax:", embed=embed)
+	embed.add_field(name="Usage", value=prefix+command.qualified_name+" "+command.usage, inline=False)
+	embed.add_field(name="Example", value=prefix+command.qualified_name+" "+command.help, inline=False)
+	return embed
 
+async def send_command_help(ctx, command):
+	embed = get_command_help(ctx, command)
+	await ctx.send("Please check your command syntax:", embed=embed)
 
 async def send_command_list(ctx, command_holder, using_help_command=False):
 	embed = discord.Embed()
@@ -116,4 +122,5 @@ async def send_command_list(ctx, command_holder, using_help_command=False):
 		await ctx.send(embed=embed)
 	else:
 		await ctx.send("Please check your command syntax:", embed=embed)
+
 

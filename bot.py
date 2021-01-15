@@ -88,7 +88,6 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			await ctx.channel.send("I am missing the following permission(s) in this channel:```\n"+"\n".join(missing_permissions)+"```")
 	
 	def find_missing_permissions(self, ctx: discord.ext.commands.Context):
-		
 		permissions = ctx.channel.permissions_for(ctx.me)
 		return [p for p in self.desired_permissions if getattr(permissions, p) == False]
 

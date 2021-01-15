@@ -4,40 +4,21 @@ import coc
 from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
+from commands.utils.responder import *
 
 army_levels = None
 
-@discord.ext.commands.command(
-	name = "levels",
-	description = "Displays all clan members' levels for a specific army unit.",
-	brief = "Displays all members' levels for a specific army unit in the given clan.",
-	usage = "[#CLANTAG or alias] [unit name]",
-	help = "#8PQGQC8 sneaky goblin"
-)
-
-async def levels_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 2:
-		await send_command_help(ctx, levels_standard)
-		return
-
-	tag = resolve_clan(args[0], ctx)
-	clash = ctx.bot.clash
-	
+async def levels(resp, tag, name):
+	tag = resp.resolve_clan(tag)
 	if tag is None:
-		await send_command_help(ctx, levels_standard)
-		return
+		return await resp.send("Invalid clan tag or alias")
 	
-	async with ctx.channel.typing():
-		(embeds, content) = await levels(tag, " ".join(args[1:]), clash)
-		await send_embeds_in_multiple_messages(ctx.channel, embeds, content)
-
-async def levels(tag, name, clash):
-	unit = await get_army_details(clash, name)
+	unit = await get_army_details(resp.clash, name)
 	if unit is None:
-		return ([], "`"+name+"` isn't a valid army unit!")
-	clan = await clash.get_clan(tag)
+		return await resp.send("`"+name+"` isn't a valid army unit!")
+	clan = await resp.clash.get_clan(tag)
 	if clan is None:
-		return([], "The clan `"+tag+"` doesn't exist!")
+		return await resp.send("The clan `"+tag+"` doesn't exist!")
 
 	if clan.level < 5: level_boost = 0
 	elif clan.level < 10: level_boost = 1
@@ -71,7 +52,7 @@ async def levels(tag, name, clash):
 		lines.append("no members have this unit unlocked \:(")
 	
 	embeds = generate_embeds(lines, embed)
-	return (embeds, "")
+	await resp.send(embeds=embeds)
 
 class ArmyUnit:
 	def __init__(self, name: str, max_level: int, min_level: int, unit_type: str):
@@ -125,6 +106,26 @@ async def init_army_details(clash: coc.Client):
 			army_levels[spell["name"].lower()] = ArmyUnit(spell["name"], spell["maxLevel"], 1, "spells")
 	#print(army_levels)
 
+
+
+
+
+
+@discord.ext.commands.command(
+	name = "levels",
+	description = "Displays all clan members' levels for a specific army unit.",
+	brief = "Displays all members' levels for a specific army unit in the given clan.",
+	usage = "[#CLANTAG or alias] [unit name]",
+	help = "#8PQGQC8 sneaky goblin"
+)
+async def levels_standard(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 2:
+		await send_command_help(ctx, levels_standard)
+		return
+	resp = StandardResponder(ctx)
+	async with resp:
+		await levels(resp, args[0], " ".join(args[1:]))
+
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(levels_standard)
 	bot.slash.add_slash_command(levels_slash,
@@ -146,14 +147,6 @@ def setup(bot: discord.ext.commands.Bot):
 	)
 
 async def levels_slash(ctx: SlashContext, clan, troop):
-	await ctx.send(content="Loading...\nNote: This feature is in beta, and not all `//` commands are supported yet.")
-
-	tag = resolve_clan_slash(clan, ctx)
-	clash = ctx._discord.clash
-	
-	if tag is None:
-		#await send_command_help(ctx, currentwar_standard)
-		return
-
-	(embeds, content) = await levels(tag, troop, clash)
-	await ctx.send(content=content, embeds=embeds)
+	resp = SlashResponder(ctx)
+	async with resp:
+		await levels(resp, clan, troop)

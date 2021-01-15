@@ -6,48 +6,31 @@ from datetime import datetime
 from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
-
-@discord.ext.commands.command(
-	name = "currentwar",
-	description = "Displays a clan's current war status.",
-	brief = "Displays the current war for the given clan.",
-	usage = "[#CLANTAG or alias]",
-	help = "#8PQGQC8"
-)
-async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
-		await send_command_help(ctx, currentwar_standard)
-		return
-
-	tag = resolve_clan(args[0], ctx)
-	clash = ctx.bot.clash
-	
-	if tag is None:
-		await send_command_help(ctx, currentwar_standard)
-		return
-
-	async with ctx.channel.typing():
-		(embeds, content) = await currentwar(tag, None, len(args) == 2 and args[1] == "full", clash)
-		await send_embeds_in_multiple_messages(ctx.channel, embeds, content)
+from commands.utils.responder import *
 		
-async def currentwar(tag, cwl_round, show_names, clash):
+async def currentwar(resp: Responder, tag, cwl_round, show_names):
+	tag = resp.resolve_clan(tag)
+	if tag is None:
+		await resp.send("Invalid clan tag or alias")
+		return
+
 	if cwl_round is None:
-		war = await find_current_war(tag, clash)
+		war = await find_current_war(tag, resp.clash)
 		if war is None:
-			clan = await clash.get_clan(tag)
-			return ([], clan.name+" ("+tag+") has a private war log.")
+			clan = await resp.clash.get_clan(tag)
+			return await resp.send(clan.name+" ("+tag+") has a private war log.")
 		elif war.state == "notInWar":
-			clan = await clash.get_clan(tag)
-			return ([], clan.name+" ("+tag+") is not in war.")
+			clan = await resp.clash.get_clan(tag)
+			return await resp.send(clan.name+" ("+tag+") is not in war.")
 	else:
-		group = await clash.get_league_group(tag)
+		group = await resp.clash.get_league_group(tag)
 		if group is None:
-			return([], clan.name+" ("+tag+") is not in CWL.")
+			await resp.send(clan.name+" ("+tag+") is not in CWL.")
 		elif cwl_round > len(group.rounds):
 			if cwl_round <= 7:
-				return([], "I can't see wars that haven't started yet. Select a number between 1 and "+str(len(group.rounds))+".")
-			return([], "Select a number between 1 and "+str(len(group.rounds))+".")
-		war = await clash.get_league_wars(group.rounds[cwl_round-1], tag)._next()
+				return await resp.send("I can't see wars that haven't started yet. Select a number between 1 and "+str(len(group.rounds))+".")
+			return await resp.send("Select a number between 1 and "+str(len(group.rounds))+".")
+		war = await resp.clash.get_league_wars(group.rounds[cwl_round-1], tag)._next()
 	
 	bases = []
 	for i in range(war.team_size):
@@ -58,9 +41,11 @@ async def currentwar(tag, cwl_round, show_names, clash):
 
 	embed = discord.Embed(title="War Map")
 	if war.state == "preparation":
-		return await create_map_prep(clash, war, bases, show_names, embed)
+		(content, lines) = await create_map_prep(resp.clash, war, bases, show_names)
 	else:
-		return create_map_battle(war, bases, show_names, embed)
+		(content, lines) = create_map_battle(war, bases, show_names)
+	embeds = generate_embeds(lines, embed)
+	await resp.send(content, embeds)
 
 async def find_current_war(tag, clash):
 	war = await clash.get_current_war(tag)
@@ -69,7 +54,7 @@ async def find_current_war(tag, clash):
 	return war
 	
 
-async def create_map_prep(clash, war, bases_input, show_names, embed):
+async def create_map_prep(clash, war, bases_input, show_names):
 	content = "\n".join([
 		"**"+war.clan.name+"** vs **"+war.opponent.name+"**",
 		"Starting in "+get_time_delta(war.start_time.now, war.start_time.time)
@@ -118,10 +103,9 @@ async def create_map_prep(clash, war, bases_input, show_names, embed):
 		clan_line = "`"+clan_name+pad_right(clan_heroes, 11)+"`"+str(emojis.th[clan_th])+"`"
 		enemy_line = "`"+str(emojis.th[enemy_th])+"`"+pad_right(enemy_heroes, 11)+enemy_name+"`"
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
-	embeds = generate_embeds(lines, embed)
-	return (embeds, content)
+	return (content, lines)
 
-def create_map_battle(war, bases, show_names, embed):
+def create_map_battle(war, bases, show_names):
 	if war.type == "cwl": max_attacks = 1
 	else: max_attacks = 2
 
@@ -171,8 +155,7 @@ def create_map_battle(war, bases, show_names, embed):
 		clan_line = "`"+clan_name+pad_left(clan_dest, 4)+"` "+stars(clan_stars)+" "+str(emojis.th[clan_th])+"`"+clan_attacks
 		enemy_line = enemy_attacks+"`"+str(emojis.th[enemy_th])+" "+stars(enemy_stars)+" `"+pad_right(enemy_dest, 4)+enemy_name+"`"
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
-	embeds = generate_embeds(lines, embed)
-	return (embeds, content)
+	return (content, lines)
 
 def get_time_delta(start, end):
 	delta = end-start
@@ -189,6 +172,25 @@ def get_time_delta(start, end):
 
 	if delta.days > 0: output = str(delta.days)+"d "+output
 	return output
+
+
+
+
+
+@discord.ext.commands.command(
+	name = "currentwar",
+	description = "Displays a clan's current war status.",
+	brief = "Displays the current war for the given clan.",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
+async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 1 or len(args) > 2:
+		await send_command_help(ctx, currentwar_standard)
+		return
+	resp = StandardResponder(ctx)
+	async with resp:
+		await currentwar(resp, args[0], None, len(args) == 2 and args[1] == "full")
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
@@ -227,19 +229,10 @@ def setup(bot: discord.ext.commands.Bot):
 		}]
 	)
 
-async def currentwar_slash(ctx: SlashContext, clan, cwl_round=None, size="compact"):
-	await ctx.send(content="Loading...\nNote: This feature is in beta, and not all `//` commands are supported yet.")
-
-	tag = resolve_clan_slash(clan, ctx)
-	clash = ctx._discord.clash
-	
-	if tag is None:
-		#await send_command_help(ctx, currentwar_standard)
-		return
-
-	if cwl_round == "full" or cwl_round == "compact":
+async def currentwar_slash(ctx: SlashContext, tag, cwl_round=None, size="compact"):
+	if cwl_round is str:
 		size = cwl_round
 		cwl_round = None
-
-	(embeds, content) = await currentwar(tag, cwl_round, size == "full", clash)
-	await ctx.send(content=content, embeds=embeds)
+	resp = SlashResponder(ctx)
+	async with resp:
+		await currentwar(resp, tag, cwl_round, size == "full")
