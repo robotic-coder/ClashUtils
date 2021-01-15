@@ -61,7 +61,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			"commands.admin",
 			"commands.alias_manager",
 			"commands.army_levels",
-			"commands.cwl.__init__",
+			"commands.cwl.root",
 			"commands.damage_calculation",
 			"commands.invite",
 			"commands.help",
