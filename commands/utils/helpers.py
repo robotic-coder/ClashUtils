@@ -51,6 +51,8 @@ def resolve_clan(tag_or_alias, ctx):
 	elif ctx.guild.id in ctx.bot.aliases and tag_or_alias in ctx.bot.aliases[ctx.guild.id]:
 		ctx.bot.storage.update_last_used(ctx.guild.id, tag_or_alias)
 		return ctx.bot.aliases[ctx.guild.id][tag_or_alias]
+	elif tag_or_alias in ctx.bot.global_aliases:
+		return ctx.bot.global_aliases[tag_or_alias]
 	else: return None
 
 def resolve_clan_slash(tag_or_alias, ctx):
@@ -59,6 +61,8 @@ def resolve_clan_slash(tag_or_alias, ctx):
 	elif ctx.guild.id in ctx._discord.aliases and tag_or_alias in ctx._discord.aliases[ctx.guild.id]:
 		ctx._discord.storage.update_last_used(ctx.guild.id, tag_or_alias)
 		return ctx._discord.aliases[ctx.guild.id][tag_or_alias]
+	elif tag_or_alias in ctx._discord.global_aliases:
+		return ctx._discord.global_aliases[tag_or_alias]
 	else: return None
 
 def stars(num_stars):
