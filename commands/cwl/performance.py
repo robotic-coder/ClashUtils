@@ -4,6 +4,226 @@ import coc
 import commands.utils.emojis as emojis
 from commands.utils.helpers import *
 
+@discord.ext.commands.group(
+	description = "Displays member CWL performance stats.",
+	brief = "Displays member CWL performance stats."
+)
+async def performance(ctx: discord.ext.commands.Context):
+	if ctx.invoked_subcommand is None:
+		await send_command_list(ctx, performance)
+		return
+
+@performance.command(
+	name="net",
+	description = "Displays CWL performance stats in terms of net benefit (attacks - defenses).",
+	brief = "Displays CWL performance stats in terms of net benefit (attacks - defenses).",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
+async def performance_net(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 1 or len(args) > 2:
+		await send_command_help(ctx, performance_net)
+		return
+
+	tag = resolve_clan(args[0], ctx)
+	clash = ctx.bot.clash
+	
+	if tag is None:
+		await send_command_help(ctx, performance_net)
+		return
+
+	async with ctx.channel.typing():
+		def sort(m: Member):
+			return (
+				m.star_score,
+				m.destruction_score,
+				m.num_attacks-m.num_rounds,
+				m.town_hall_level
+			)
+		
+		stats = await get_stats(tag, clash)
+		if stats is None:
+			clan = await clash.get_clan(tag)
+			await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+			return
+			
+		members = sorted(stats["members"], key=sort, reverse=True)
+
+		lines = []
+		if len(args) == 2 and args[1] == "full":
+			lines.append("`   | STARS       | DESTRUCTION    | COUNT        |                    `")
+			lines.append("` # | Atk Def A-D | Atk  Def  A-D  | Atk Def Rnds | Member             `")
+			lines.append("`---|-------------|----------------|--------------|--------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				attack_stars = pad_left(member.attack_stars, 3)
+				defence_stars = pad_left(member.defence_stars, 3)
+				star_score = pad_left(member.star_score, 3)
+				attack_destruction = pad_left(member.attack_destruction, 3)
+				defence_destruction = pad_left(member.defence_destruction, 3)
+				destruction_score = pad_left(member.destruction_score, 4)
+				num_attacks = str(member.num_attacks)
+				num_defenses = pad_left(member.num_defenses, 3)
+				num_rounds = str(member.num_rounds)
+				th = str(emojis.th[member.town_hall_level])
+
+				if member.num_attacks < member.num_rounds:
+					marker = "*"
+				else: marker = " "
+				lines.append("\u2066`"+rank+" | "+attack_stars+" "+defence_stars+" "+star_score+" | "+attack_destruction+"  "+defence_destruction+"  "+destruction_score+" |  "+marker+num_attacks+" "+num_defenses+"    "+num_rounds+" | `"+th+" `"+member.name+"`")
+		else:
+			lines.append("`   Net   Net                  `")
+			lines.append("` # Stars Dest  Member         `")
+			lines.append("`------------------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				star_score = pad_left(member.star_score, 4)
+				destruction_score = pad_left(member.destruction_score, 4)
+
+				if member.num_attacks < member.num_rounds:
+					marker = "*"
+				else: marker = " "
+				lines.append("\u2066`"+rank+" "+star_score+"  "+destruction_score+" "+marker+member.name+"`")
+		
+		embed = discord.Embed(title=stats["clan_name"]+": CWL Net Gain after "+str(stats["num_rounds"])+" rounds")
+		embed.set_footer(text=tag)
+		await send_lines_in_embed(ctx.channel, lines, embed=embed)
+
+@performance.command(
+	name="attacks",
+	description = "Displays CWL performance stats in terms of attacks.",
+	brief = "Displays CWL performance stats in terms of attacks.",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
+async def performance_attacks(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 1 or len(args) > 2:
+		await send_command_help(ctx, performance_attacks)
+		return
+
+	tag = resolve_clan(args[0], ctx)
+	clash = ctx.bot.clash
+	
+	if tag is None:
+		await send_command_help(ctx, performance_attacks)
+		return
+
+	async with ctx.channel.typing():
+		def sort(m: Member):
+			return (
+				m.avg_attack_stars,
+				m.avg_attack_destruction,
+				m.num_attacks-m.num_rounds,
+				m.town_hall_level
+			)
+		stats = await get_stats(tag, clash)
+		if stats is None:
+			clan = await clash.get_clan(tag)
+			await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+			return
+			
+		members = sorted(stats["members"], key=sort, reverse=True)
+
+		lines = []
+		if len(args) == 2 and args[1] == "full":
+			lines.append("`   | STARS      | DESTRUCTION |      |                    `")
+			lines.append("` # | Tot  Avg   | Tot  Avg    | Atks | Member             `")
+			lines.append("`---|------------|-------------|------|--------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				stars = pad_left(member.attack_stars, 3)
+				avg_stars = round_fixed(member.avg_attack_stars, 3)
+				destruction = pad_left(member.attack_destruction, 3)
+				avg_destruction = pad_left(round_fixed(member.avg_attack_destruction, 3), 7)
+				num_attacks = str(member.num_attacks)
+				num_rounds = str(member.num_rounds)
+				th = str(emojis.th[member.town_hall_level])
+
+				if member.num_attacks < member.num_rounds:
+					marker = "*"
+				else: marker = " "
+				lines.append("\u2066`"+rank+" | "+stars+"  "+avg_stars+" | "+destruction+" "+avg_destruction+" | "+marker+num_attacks+"/"+num_rounds+" | `"+th+" `"+member.name+"`")
+		else:
+			lines.append("`   Avg    Avg                  `")
+			lines.append("` # Stars  Dest  Member         `")
+			lines.append("`-------------------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				avg_stars = pad_left(round_fixed(member.avg_attack_stars, 1), 5)
+				avg_destruction = pad_left(round_fixed(member.avg_attack_destruction, 1), 5)
+
+				if member.num_attacks < member.num_rounds:
+					marker = "*"
+				else: marker = " "
+				lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+" "+marker+member.name+"`")
+		
+		embed = discord.Embed(title=stats["clan_name"]+": CWL Average Attacks after "+str(stats["num_rounds"])+" rounds")
+		embed.set_footer(text=tag)
+		await send_lines_in_embed(ctx.channel, lines, embed=embed)
+
+@performance.command(
+	name="defenses",
+	description = "Displays CWL performance stats in terms of defenses.",
+	brief = "Displays CWL performance stats in terms of defenses.",
+	usage = "[#CLANTAG or alias]",
+	help = "#8PQGQC8"
+)
+async def performance_defenses(ctx: discord.ext.commands.Context, *args):
+	if len(args) < 1 or len(args) > 2:
+		await send_command_help(ctx, performance_attacks)
+		return
+
+	tag = resolve_clan(args[0], ctx)
+	clash = ctx.bot.clash
+	
+	if tag is None:
+		await send_command_help(ctx, performance_attacks)
+		return
+
+	async with ctx.channel.typing():
+		def sort(m: Member):
+			return (
+				m.avg_defence_stars*-1,
+				m.avg_defence_destruction*-1,
+				m.num_attacks-m.num_rounds,
+				m.town_hall_level
+			)
+		stats = await get_stats(tag, clash)
+		if stats is None:
+			clan = await clash.get_clan(tag)
+			await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+			return
+
+		members = sorted(stats["members"], key=sort, reverse=True)
+
+		lines = []
+		if len(args) == 2 and args[1] == "full":
+			lines.append("`   | STARS      | DESTRUCTION |      |                    `")
+			lines.append("` # | Tot  Avg   | Tot  Avg    | Defs | Member             `")
+			lines.append("`---|------------|-------------|------|--------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				stars = pad_left(member.defence_stars, 3)
+				avg_stars = round_fixed(member.avg_defence_stars, 3)
+				destruction = pad_left(member.defence_destruction, 3)
+				avg_destruction = pad_left(round_fixed(member.avg_defence_destruction, 3), 7)
+				num_defenses = str(member.num_defenses)
+				num_rounds = str(member.num_rounds)
+				th = str(emojis.th[member.town_hall_level])
+				lines.append("\u2066`"+rank+" | "+stars+"  "+avg_stars+" | "+destruction+" "+avg_destruction+" |  "+num_defenses+"/"+num_rounds+" | `"+th+" `"+member.name+"`")
+		else:
+			lines.append("`   Avg    Avg                  `")
+			lines.append("` # Stars  Dest  Member         `")
+			lines.append("`-------------------------------`")
+			for (index, member) in enumerate(members):
+				rank = pad_left(index+1, 2)
+				avg_stars = pad_left(round_fixed(member.avg_defence_stars, 1), 5)
+				avg_destruction = pad_left(round_fixed(member.avg_defence_destruction, 1), 5)
+				lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+"  "+member.name+"`")
+		
+		embed = discord.Embed(title=stats["clan_name"]+": CWL Average Defenses after "+str(stats["num_rounds"])+" rounds")
+		embed.set_footer(text=tag)
+		await send_lines_in_embed(ctx.channel, lines, embed=embed)
 
 class Member:
 	def __init__(self, coc_member: coc.ClanWarMember):
@@ -76,225 +296,5 @@ async def get_stats(tag: str, clash: coc.Client):
 	except coc.errors.NotFound:
 		return None
 
-
 def setup(group: discord.ext.commands.Group):
-	@group.group(
-		description = "Displays member CWL performance stats.",
-		brief = "Displays member CWL performance stats."
-	)
-	async def performance(self, ctx: discord.ext.commands.Context):
-		if ctx.invoked_subcommand is None:
-			await send_command_list(ctx, self.performance)
-			return
-	
-	@performance.command(
-		name="net",
-		description = "Displays CWL performance stats in terms of net benefit (attacks - defenses).",
-		brief = "Displays CWL performance stats in terms of net benefit (attacks - defenses).",
-		usage = "[#CLANTAG or alias]",
-		help = "#8PQGQC8"
-	)
-	async def performance_net(ctx: discord.ext.commands.Context, *args):
-		if len(args) < 1 or len(args) > 2:
-			await send_command_help(ctx, performance_net)
-			return
-
-		tag = resolve_clan(args[0], ctx)
-		clash = ctx.bot.clash
-		
-		if tag is None:
-			await send_command_help(ctx, performance_net)
-			return
-
-		async with ctx.channel.typing():
-			def sort(m: Member):
-				return (
-					m.star_score,
-					m.destruction_score,
-					m.num_attacks-m.num_rounds,
-					m.town_hall_level
-				)
-			
-			stats = await get_stats(tag, clash)
-			if stats is None:
-				clan = await clash.get_clan(tag)
-				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
-				return
-				
-			members = sorted(stats["members"], key=sort, reverse=True)
-
-			lines = []
-			if len(args) == 2 and args[1] == "full":
-				lines.append("`   | STARS       | DESTRUCTION    | COUNT        |                    `")
-				lines.append("` # | Atk Def A-D | Atk  Def  A-D  | Atk Def Rnds | Member             `")
-				lines.append("`---|-------------|----------------|--------------|--------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					attack_stars = pad_left(member.attack_stars, 3)
-					defence_stars = pad_left(member.defence_stars, 3)
-					star_score = pad_left(member.star_score, 3)
-					attack_destruction = pad_left(member.attack_destruction, 3)
-					defence_destruction = pad_left(member.defence_destruction, 3)
-					destruction_score = pad_left(member.destruction_score, 4)
-					num_attacks = str(member.num_attacks)
-					num_defenses = pad_left(member.num_defenses, 3)
-					num_rounds = str(member.num_rounds)
-					th = str(emojis.th[member.town_hall_level])
-
-					if member.num_attacks < member.num_rounds:
-						marker = "*"
-					else: marker = " "
-					lines.append("\u2066`"+rank+" | "+attack_stars+" "+defence_stars+" "+star_score+" | "+attack_destruction+"  "+defence_destruction+"  "+destruction_score+" |  "+marker+num_attacks+" "+num_defenses+"    "+num_rounds+" | `"+th+" `"+member.name+"`")
-			else:
-				lines.append("`   Net   Net                  `")
-				lines.append("` # Stars Dest  Member         `")
-				lines.append("`------------------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					star_score = pad_left(member.star_score, 4)
-					destruction_score = pad_left(member.destruction_score, 4)
-
-					if member.num_attacks < member.num_rounds:
-						marker = "*"
-					else: marker = " "
-					lines.append("\u2066`"+rank+" "+star_score+"  "+destruction_score+" "+marker+member.name+"`")
-			
-			embed = discord.Embed(title=stats["clan_name"]+": CWL Net Gain after "+str(stats["num_rounds"])+" rounds")
-			embed.set_footer(text=tag)
-			await send_lines_in_embed(ctx.channel, lines, embed=embed)
-
-	@performance.command(
-		name="attacks",
-		description = "Displays CWL performance stats in terms of attacks.",
-		brief = "Displays CWL performance stats in terms of attacks.",
-		usage = "[#CLANTAG or alias]",
-		help = "#8PQGQC8"
-	)
-	async def performance_attacks(self, ctx: discord.ext.commands.Context, *args):
-		if len(args) < 1 or len(args) > 2:
-			await send_command_help(ctx, performance_attacks)
-			return
-
-		tag = resolve_clan(args[0], ctx)
-		clash = ctx.bot.clash
-		
-		if tag is None:
-			await send_command_help(ctx, performance_attacks)
-			return
-
-		async with ctx.channel.typing():
-			def sort(m: Member):
-				return (
-					m.avg_attack_stars,
-					m.avg_attack_destruction,
-					m.num_attacks-m.num_rounds,
-					m.town_hall_level
-				)
-			stats = await get_stats(tag, clash)
-			if stats is None:
-				clan = await clash.get_clan(tag)
-				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
-				return
-				
-			members = sorted(stats["members"], key=sort, reverse=True)
-
-			lines = []
-			if len(args) == 2 and args[1] == "full":
-				lines.append("`   | STARS      | DESTRUCTION |      |                    `")
-				lines.append("` # | Tot  Avg   | Tot  Avg    | Atks | Member             `")
-				lines.append("`---|------------|-------------|------|--------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					stars = pad_left(member.attack_stars, 3)
-					avg_stars = round_fixed(member.avg_attack_stars, 3)
-					destruction = pad_left(member.attack_destruction, 3)
-					avg_destruction = pad_left(round_fixed(member.avg_attack_destruction, 3), 7)
-					num_attacks = str(member.num_attacks)
-					num_rounds = str(member.num_rounds)
-					th = str(emojis.th[member.town_hall_level])
-
-					if member.num_attacks < member.num_rounds:
-						marker = "*"
-					else: marker = " "
-					lines.append("\u2066`"+rank+" | "+stars+"  "+avg_stars+" | "+destruction+" "+avg_destruction+" | "+marker+num_attacks+"/"+num_rounds+" | `"+th+" `"+member.name+"`")
-			else:
-				lines.append("`   Avg    Avg                  `")
-				lines.append("` # Stars  Dest  Member         `")
-				lines.append("`-------------------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					avg_stars = pad_left(round_fixed(member.avg_attack_stars, 1), 5)
-					avg_destruction = pad_left(round_fixed(member.avg_attack_destruction, 1), 5)
-
-					if member.num_attacks < member.num_rounds:
-						marker = "*"
-					else: marker = " "
-					lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+" "+marker+member.name+"`")
-			
-			embed = discord.Embed(title=stats["clan_name"]+": CWL Average Attacks after "+str(stats["num_rounds"])+" rounds")
-			embed.set_footer(text=tag)
-			await send_lines_in_embed(ctx.channel, lines, embed=embed)
-
-	@performance.command(
-		name="defenses",
-		description = "Displays CWL performance stats in terms of defenses.",
-		brief = "Displays CWL performance stats in terms of defenses.",
-		usage = "[#CLANTAG or alias]",
-		help = "#8PQGQC8"
-	)
-	async def performance_defenses(self, ctx: discord.ext.commands.Context, *args):
-		if len(args) < 1 or len(args) > 2:
-			await send_command_help(ctx, performance_attacks)
-			return
-
-		tag = resolve_clan(args[0], ctx)
-		clash = ctx.bot.clash
-		
-		if tag is None:
-			await send_command_help(ctx, performance_attacks)
-			return
-
-		async with ctx.channel.typing():
-			def sort(m: Member):
-				return (
-					m.avg_defence_stars*-1,
-					m.avg_defence_destruction*-1,
-					m.num_attacks-m.num_rounds,
-					m.town_hall_level
-				)
-			stats = await get_stats(tag, clash)
-			if stats is None:
-				clan = await clash.get_clan(tag)
-				await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
-				return
-
-			members = sorted(stats["members"], key=sort, reverse=True)
-
-			lines = []
-			if len(args) == 2 and args[1] == "full":
-				lines.append("`   | STARS      | DESTRUCTION |      |                    `")
-				lines.append("` # | Tot  Avg   | Tot  Avg    | Defs | Member             `")
-				lines.append("`---|------------|-------------|------|--------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					stars = pad_left(member.defence_stars, 3)
-					avg_stars = round_fixed(member.avg_defence_stars, 3)
-					destruction = pad_left(member.defence_destruction, 3)
-					avg_destruction = pad_left(round_fixed(member.avg_defence_destruction, 3), 7)
-					num_defenses = str(member.num_defenses)
-					num_rounds = str(member.num_rounds)
-					th = str(emojis.th[member.town_hall_level])
-					lines.append("\u2066`"+rank+" | "+stars+"  "+avg_stars+" | "+destruction+" "+avg_destruction+" |  "+num_defenses+"/"+num_rounds+" | `"+th+" `"+member.name+"`")
-			else:
-				lines.append("`   Avg    Avg                  `")
-				lines.append("` # Stars  Dest  Member         `")
-				lines.append("`-------------------------------`")
-				for (index, member) in enumerate(members):
-					rank = pad_left(index+1, 2)
-					avg_stars = pad_left(round_fixed(member.avg_defence_stars, 1), 5)
-					avg_destruction = pad_left(round_fixed(member.avg_defence_destruction, 1), 5)
-					lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+"  "+member.name+"`")
-			
-			embed = discord.Embed(title=stats["clan_name"]+": CWL Average Defenses after "+str(stats["num_rounds"])+" rounds")
-			embed.set_footer(text=tag)
-			await send_lines_in_embed(ctx.channel, lines, embed=embed)
+	group.add_command(performance)
