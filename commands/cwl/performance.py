@@ -296,5 +296,5 @@ async def get_stats(tag: str, clash: coc.Client):
 	except coc.errors.NotFound:
 		return None
 
-def setup(group: discord.ext.commands.Group):
+def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 	group.add_command(performance)

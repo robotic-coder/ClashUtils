@@ -4,15 +4,19 @@ import commands.cwl.roster as roster
 from commands.utils.helpers import *
 
 @discord.ext.commands.group(
+	name = "cwl",
 	description = "Various commands to view CWL data.",
 	brief = "Various commands to view CWL data."
 )
-async def cwl(ctx: discord.ext.commands.Context):
+async def cwl_standard(ctx: discord.ext.commands.Context):
 	if ctx.invoked_subcommand is None:
-		await send_command_list(ctx, cwl)
+		await send_command_list(ctx, cwl_standard)
 		return
 
 def setup(bot: discord.ext.commands.Bot):
-	performance.setup(cwl)
-	roster.setup(cwl)
-	bot.add_command(cwl)
+	performance.setup(bot, cwl_standard)
+	roster.setup(bot, cwl_standard)
+
+	bot.add_command(cwl_standard)
+
+	
