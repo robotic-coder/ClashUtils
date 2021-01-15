@@ -6,51 +6,52 @@ import commands.utils.emojis as emojis
 
 hero_names = [ "Barbarian King", "Archer Queen", "Grand Warden", "Royal Champion" ]
 
-@discord.ext.commands.command(
-	description = "Displays a clan's CWL roster.",
-	brief = "Displays the CWL roster for the given clan.",
-	usage = "[#CLANTAG or alias]",
-	help = "#8PQGQC8"
-)
-async def roster(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
-		await helpers.send_command_help(ctx, roster)
-		return
+def setup(group: discord.ext.commands.Group):
+	@group.command(
+		description = "Displays a clan's CWL roster.",
+		brief = "Displays the CWL roster for the given clan.",
+		usage = "[#CLANTAG or alias]",
+		help = "#8PQGQC8"
+	)
+	async def roster(ctx: discord.ext.commands.Context, *args):
+		if len(args) < 1 or len(args) > 2:
+			await helpers.send_command_help(ctx, roster)
+			return
 
-	tag = helpers.resolve_clan(args[0], ctx)
-	clash = ctx.bot.clash
-	
-	if tag is None:
-		await helpers.send_command_help(ctx, roster)
-		return
+		tag = helpers.resolve_clan(args[0], ctx)
+		clash = ctx.bot.clash
+		
+		if tag is None:
+			await helpers.send_command_help(ctx, roster)
+			return
 
-	try:
-		async with ctx.channel.typing():
-			league_group = await clash.get_league_group(tag)
-			size = (await clash.get_league_war(league_group.rounds[0][0])).team_size
-			clan = next(x for x in league_group.clans if x.tag == tag)
-			player_tags = []
-			for player in clan.members:
-				player_tags.append(player.tag)
-			participants = []
-			async for player in clash.get_players(player_tags):
-				participants.append(summarise_player(player))
-			
-			participants = sorted(participants, key=sort_participants, reverse=True)
-			if len(args) == 1:	
-				lines = create_output(clan, participants, size, False)
-			elif len(args) == 2 and args[1] == "links":
-				lines = create_output(clan, participants, size, True)
-			else:
-				await ctx.channel.send("format: `//roster #CLANTAG`")
-				return
-			embed = discord.Embed(title="CWL Roster for "+clan.name)
-			embed.set_footer(text=tag)
-			await helpers.send_lines_in_embed(ctx.channel, lines, embed)
+		try:
+			async with ctx.channel.typing():
+				league_group = await clash.get_league_group(tag)
+				size = (await clash.get_league_war(league_group.rounds[0][0])).team_size
+				clan = next(x for x in league_group.clans if x.tag == tag)
+				player_tags = []
+				for player in clan.members:
+					player_tags.append(player.tag)
+				participants = []
+				async for player in clash.get_players(player_tags):
+					participants.append(summarise_player(player))
+				
+				participants = sorted(participants, key=sort_participants, reverse=True)
+				if len(args) == 1:	
+					lines = create_output(clan, participants, size, False)
+				elif len(args) == 2 and args[1] == "links":
+					lines = create_output(clan, participants, size, True)
+				else:
+					await ctx.channel.send("format: `//roster #CLANTAG`")
+					return
+				embed = discord.Embed(title="CWL Roster for "+clan.name)
+				embed.set_footer(text=tag)
+				await helpers.send_lines_in_embed(ctx.channel, lines, embed)
 
-	except coc.errors.NotFound:
-		clan = await clash.get_clan(tag)
-		await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
+		except coc.errors.NotFound:
+			clan = await clash.get_clan(tag)
+			await ctx.channel.send(clan.name+" ("+tag+") is not currently in a Clan War League")
 	
 
 def sort_participants(p):
@@ -114,6 +115,3 @@ def generate_hero_levels(player):
 	return output
 #def check_max_hero_levels(member: coc.Player):
 	#if member.town_hall
-
-def setup(bot: discord.ext.commands.Bot):
-	bot.add_command(roster)
