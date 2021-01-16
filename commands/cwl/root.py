@@ -1,7 +1,7 @@
 import discord.ext.commands
 from commands.utils.helpers import *
 
-import commands.cwl.performance.root as performance
+import commands.cwl.performance as performance
 import commands.cwl.roster as roster
 
 @discord.ext.commands.group(
@@ -20,4 +20,5 @@ def setup(bot: discord.ext.commands.Bot):
 
 	bot.add_command(cwl_standard)
 
-	
+async def test(ctx):
+	print("yeet")
