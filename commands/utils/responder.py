@@ -3,80 +3,91 @@ import discord.ext.commands
 from discord_slash import SlashCommand, SlashContext
 	
 class Responder():
-	def __init__(self, ctx):
-		self.ctx = ctx
-		self.bot = None
-		self.clash = None
-		self.loading = None
+	def __init__(self, ctx, bot):
+		self._ctx = ctx
+		self.bot = bot
+		self.clash = bot.clash
+
+		(self.author, self.author_id) = self.__get_details(ctx.author)
+		(self.channel, self.channel_id) = self.__get_details(ctx.channel)
+		(self.guild, self.guild_id) = self.__get_details(ctx.guild)
+
+		if self.channel is not None:
+			self._loading = ctx.channel.typing()
+		else: self._loading = None
+
+	def __get_details(self, element):
+		if element is None or isinstance(element, int):
+			return (None, element)
+		else:
+			return (element, element.id)
 
 	async def send(self, content="", embeds=[]):
 		pass
 
 	def resolve_clan(self, input: str):
 		if input.startswith("#"):
-			return input
-		elif self.ctx.guild.id in self.bot.aliases and input in self.bot.aliases[self.ctx.guild.id]:
-			self.bot.storage.update_last_used(self.ctx.guild.id, input)
-			return self.bot.aliases[self.ctx.guild.id][input]
+			return input.upper()
+		elif self.guild_id in self.bot.aliases and input in self.bot.aliases[self.guild_id]:
+			self.bot.storage.update_last_used(self.guild_id, input)
+			return self.bot.aliases[self.guild_id][input]
 		elif input in self.bot.global_aliases:
 			return self.bot.global_aliases[input]
 		else: return None
 		
 	async def __aenter__(self):
-		if self.loading is not None:
-			await self.loading.__aenter__()
+		if self._loading is not None:
+			await self._loading.__aenter__()
 
 	async def __aexit__(self, err_type, err_value, traceback):
-		if self.loading is not None:
-			await self.loading.__aexit__(err_type, err_value, traceback)
+		if self._loading is not None:
+			await self._loading.__aexit__(err_type, err_value, traceback)
 
 class StandardResponder(Responder):
 	def __init__(self, ctx: discord.ext.commands.Context):
-		self.ctx = ctx
-		self.bot = ctx.bot
-		self.clash = ctx.bot.clash
-		self.loading = ctx.channel.typing()
+		super().__init__(ctx, ctx.bot)
+		self._loading = ctx.channel.typing()
 
 	async def send(self, content="", embeds=[]):
 		if len(embeds) > 0:
-			message = await self.ctx.channel.send(content, embed=embeds.pop(0))
+			message = await self.channel.send(content, embed=embeds.pop(0))
 			output = await self.send("", embeds)
 			return [message]+output
 		elif len(content) > 0:
-			message = await self.ctx.channel.send(content)
+			message = await self.channel.send(content)
 			return [message]
 		else:
 			return []
 
 class SlashResponder(Responder):
 	def __init__(self, ctx: SlashContext):
-		self.ctx = ctx
-		self.bot = ctx._discord
-		self.clash = ctx._discord.clash
-		if ctx.channel is not None:
-			self.loading = ctx.channel.typing()
-		self.loading_message_sent = False
+		super().__init__(ctx, ctx._discord)
+		self.__loading_message_sent = False
 
 	async def send(self, content="", embeds=[]):
 		await self.__send(content, embeds)
-		if self.loading_message_sent:
-			await self.ctx.delete()
-			self.loading_message_sent = False
+		if self.__loading_message_sent:
+			await self._ctx.delete()
+			self.__loading_message_sent = False
 
 	async def __send(self, content, embeds):
 		if len(embeds) > 10:
-			await self.ctx.send(content=content, embeds=embeds[:10])
+			await self._ctx.send(content=content, embeds=embeds[:10])
 			await self.__send("", embeds[10:])
 		elif len(embeds) > 0 or len(content) > 0:
-			await self.ctx.send(content=content, embeds=embeds)
+			await self._ctx.send(content=content, embeds=embeds)
 		return []
 
 	async def __aenter__(self):
-		if not self.loading_message_sent:
+		if self.author is None and self.author_id is not None and self.guild is not None:
+			self.author = await self.guild.fetch_member(self.author_id)
+		
+		if not self.__loading_message_sent:
 			await self.send(content="Loading...")
-			self.loading_message_sent = True
-		if self.loading is not None:
+			self.__loading_message_sent = True
+		
+		if self._loading is not None:
 			try:
-				await self.loading.__aenter__()
+				await self._loading.__aenter__()
 			except discord.errors.Forbidden:
-				self.loading = None
+				self._loading = None

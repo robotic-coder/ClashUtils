@@ -1,6 +1,7 @@
 import discord
 import discord.ext.commands
 import coc
+import re
 from math import floor
 from datetime import datetime
 from commands.utils.helpers import *
@@ -8,7 +9,7 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 		
-async def currentwar(resp: Responder, tag, cwl_round, show_names):
+async def currentwar(resp: Responder, tag, exclude, cwl_round, show_names):
 	tag = resp.resolve_clan(tag)
 	if tag is None:
 		await resp.send("Invalid clan tag or alias")
@@ -40,10 +41,11 @@ async def currentwar(resp: Responder, tag, cwl_round, show_names):
 		bases.append(base)
 
 	embed = discord.Embed(title="War Map")
+	embed.set_footer(text=war.clan.tag+" vs "+war.opponent.tag)
 	if war.state == "preparation":
 		(content, lines) = await create_map_prep(resp.clash, war, bases, show_names)
 	else:
-		(content, lines) = create_map_battle(war, bases, show_names)
+		(content, lines) = create_map_battle(war, bases, exclude, show_names)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(content, embeds)
 
@@ -105,9 +107,16 @@ async def create_map_prep(clash, war, bases_input, show_names):
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 	return (content, lines)
 
-def create_map_battle(war, bases, show_names):
+def create_map_battle(war, bases, exclusions, show_names):
 	if war.type == "cwl": max_attacks = 1
 	else: max_attacks = 2
+
+	if exclusions is not None:
+		params = re.match("/^((\d+[a,b]\d)((, )|$))+/", exclusions)
+		if params is None:
+			print("Failed regex")
+			return
+		war = exclude_attacks(war, exclusions)
 
 	if war.state == "inWar":
 		state = get_time_delta(war.end_time.now, war.end_time.time)+" remaining"
@@ -157,6 +166,14 @@ def create_map_battle(war, bases, show_names):
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 	return (content, lines)
 
+# Not used
+def exclude_attacks(war, exclusions):
+	remove = []
+	for x in exclusions.split(", "):
+		param = re.match("/^((\d+)([a,b])(\d)/", x)
+		
+	return war
+
 def get_time_delta(start, end):
 	delta = end-start
 	if delta.seconds < 0:
@@ -185,12 +202,12 @@ def get_time_delta(start, end):
 	help = "#8PQGQC8"
 )
 async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
+	if len(args) != 1:
 		await send_command_help(ctx, currentwar_standard)
 		return
 	resp = StandardResponder(ctx)
 	async with resp:
-		await currentwar(resp, args[0], None, len(args) == 2 and args[1] == "full")
+		await currentwar(resp, args[0], None, None, False)
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
@@ -230,9 +247,15 @@ def setup(bot: discord.ext.commands.Bot):
 	)
 
 async def currentwar_slash(ctx: SlashContext, tag, cwl_round=None, size="compact"):
-	if cwl_round is str:
+	"""if exclude is int:
+		cwl_round = exclude
+		exclude = None
+	elif exclude == "full" or exclude == "compact":
+		size = exclude
+		exclude = None"""
+	if cwl_round == "full" or cwl_round == "compact":
 		size = cwl_round
 		cwl_round = None
 	resp = SlashResponder(ctx)
 	async with resp:
-		await currentwar(resp, tag, cwl_round, size == "full")
+		await currentwar(resp, tag, None, cwl_round, size == "full")

@@ -23,7 +23,10 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			self.command_guild_ids = None
 			self.slash_command_prefix = ""
 		else:
-			self.command_guild_ids = [738656460430377013]
+			self.command_guild_ids = [
+				738656460430377013, #main guild
+				789297914446348299 # slash-only guild
+			]
 			self.slash_command_prefix = "dev-"
 
 		self.clash = coc.login(
