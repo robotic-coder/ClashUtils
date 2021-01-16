@@ -20,11 +20,9 @@ async def invite_standard(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(invite_standard)
-	bot.slash.add_slash_command(invite_slash,
-		name=bot.slash_command_prefix+"invite",
-		description="Sends a link that can be used to add me to a server",
-		guild_ids=bot.command_guild_ids,
-		options=[]
+	bot.add_slash_command(invite_slash,
+		name="invite",
+		description="Sends a link that can be used to add me to a server"
 	)
 
 async def invite_slash(ctx: SlashContext):

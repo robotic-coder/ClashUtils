@@ -19,6 +19,3 @@ def setup(bot: discord.ext.commands.Bot):
 	roster.setup(bot, cwl_standard)
 
 	bot.add_command(cwl_standard)
-
-async def test(ctx):
-	print("yeet")

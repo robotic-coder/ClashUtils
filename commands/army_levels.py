@@ -128,20 +128,21 @@ async def levels_standard(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(levels_standard)
-	bot.slash.add_slash_command(levels_slash,
-		name=bot.slash_command_prefix+"levels",
+	bot.add_slash_command(levels_slash,
+		name="levels",
 		description="Displays all members' levels for a specific army unit in the given clan",
-		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
 			"name": "clan",
 			"description": "A clan tag or alias",
+			"example": "#8PQGQC8",
 			"required": True
 		},
 		{
 			"type": 3,
 			"name": "unit",
 			"description": "The army unit to check",
+			"example": "sneaky goblin",
 			"required": True
 		}]
 	)

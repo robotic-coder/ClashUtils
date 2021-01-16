@@ -115,22 +115,23 @@ async def roster_standard(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 	group.add_command(roster_standard)
-	bot.slash.add_subcommand(roster_slash, 
-		base=bot.slash_command_prefix+"cwl",
+	bot.add_slash_subcommand(roster_slash, 
+		base="cwl",
 		base_description="Various commands to view CWL data",
 		name="roster",
 		description="Displays the CWL roster for the given clan",
-		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
 			"name": "clan",
 			"description": "A clan tag or alias",
+			"example": "#8PQGQC8",
 			"required": True
 		},
 		{
 			"type": 3,
 			"name": "size",
-			"description": "The amount of data to be shown. `full` will probably display incorrectly on a phone.",
+			"description": "The amount of data to be shown. full will probably display incorrectly on a phone.",
+			"example": "full",
 			"required": False,
 			"choices": [
 				{

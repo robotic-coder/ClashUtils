@@ -93,7 +93,7 @@ def get_command_help(ctx, command):
 	if ctx is discord.ext.commands.Context:
 		prefix = ctx.prefix
 	else:
-		prefix = "/"
+		prefix = "//"
 	embed = discord.Embed(title=command.qualified_name, description=command.brief)
 	embed.add_field(name="Usage", value=prefix+command.qualified_name+" "+command.usage, inline=False)
 	embed.add_field(name="Example", value=prefix+command.qualified_name+" "+command.help, inline=False)

@@ -91,20 +91,21 @@ async def damage_standard(ctx: discord.ext.commands.Context, *args):
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(damage_standard)
-	bot.slash.add_slash_command(damage_slash,
-		name=bot.slash_command_prefix+"damage",
+	bot.add_slash_command(damage_slash,
+		name="damage",
 		description="Calculates damage from Lightning/Earthquake Spells and the Royal Champion's Seeking Shield",
-		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 4,
 			"name": "building-hp",
 			"description": "The hitpoints of the target building",
+			"example": "4800",
 			"required": True
 		},
 		{
 			"type": 3,
 			"name": "items",
 			"description": "Each item must be in the format [qty]x [item][level] and separated by a comma and space.",
+			"example": "6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9",
 			"required": True
 		}]
 	)

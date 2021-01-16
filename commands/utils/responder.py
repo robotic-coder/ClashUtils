@@ -86,8 +86,7 @@ class SlashResponder(Responder):
 			await self.send(content="Loading...")
 			self.__loading_message_sent = True
 		
-		if self._loading is not None:
-			try:
-				await self._loading.__aenter__()
-			except discord.errors.Forbidden:
-				self._loading = None
+		try:
+			await super().__aenter__()
+		except discord.errors.Forbidden:
+			self._loading = None

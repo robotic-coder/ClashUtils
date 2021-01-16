@@ -114,47 +114,46 @@ async def list_standard(ctx: discord.ext.commands.Context, *args):
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(alias)
 	
-	bot.slash.add_subcommand(add_slash, 
-		base=bot.slash_command_prefix+"alias",
+	bot.add_slash_subcommand(add_slash, 
+		base="alias",
 		base_description="Manages aliases that can be used in place of clan tags",
 		name="add",
 		description="Adds a clan alias to this server",
-		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
 			"name": "alias",
 			"description": "A clan alias. May not begin with a #.",
+			"example": "myclan",
 			"required": True
 		},
 		{
 			"type": 3,
 			"name": "clan-tag",
 			"description": "The tag of the clan to link.",
+			"example": "#8PQGQC8",
 			"required": True
 		}]
 	)
 
-	bot.slash.add_subcommand(remove_slash, 
-		base=bot.slash_command_prefix+"alias",
+	bot.add_slash_subcommand(remove_slash, 
+		base="alias",
 		base_description="Manages aliases that can be used in place of clan tags",
 		name="remove",
 		description="Removes a clan alias from this server",
-		guild_ids=bot.command_guild_ids,
 		options=[{
 			"type": 3,
 			"name": "alias",
 			"description": "A clan alias on this server",
+			"example": "myclan",
 			"required": True
 		}]
 	)
 
-	bot.slash.add_subcommand(list_slash, 
-		base=bot.slash_command_prefix+"alias",
+	bot.add_slash_subcommand(list_slash, 
+		base="alias",
 		base_description="Manages aliases that can be used in place of clan tags",
 		name="list",
-		description="Displays all clan aliases in this server",
-		guild_ids=bot.command_guild_ids,
-		options=[]
+		description="Displays all clan aliases in this server"
 	)
 
 async def add_slash(ctx: SlashContext, alias, tag):
