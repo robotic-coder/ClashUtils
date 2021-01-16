@@ -1,7 +1,8 @@
 import discord.ext.commands
-import commands.cwl.performance as performance
-import commands.cwl.roster as roster
 from commands.utils.helpers import *
+
+import commands.cwl.performance.root as performance
+import commands.cwl.roster as roster
 
 @discord.ext.commands.group(
 	name = "cwl",

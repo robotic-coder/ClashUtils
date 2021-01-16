@@ -111,7 +111,7 @@ async def roster_standard(ctx: discord.ext.commands.Context, *args):
 
 	resp = StandardResponder(ctx)
 	async with resp:
-		await roster(resp, args[0], args[1])
+		await roster(resp, args[0], len(args)==2)
 
 def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 	group.add_command(roster_standard)
