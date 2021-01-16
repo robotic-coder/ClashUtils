@@ -176,9 +176,10 @@ def exclude_attacks(war, exclusions):
 
 def get_time_delta(start, end):
 	delta = end-start
-	if delta.seconds < 0:
-		return "now"
-	minutes = floor(delta.seconds/60)
+	seconds = delta.total_seconds()
+	if seconds < 0:
+		return "0s"
+	minutes = floor(seconds/60)
 	hours = floor(minutes/60)
 	minutes %= 60
 
