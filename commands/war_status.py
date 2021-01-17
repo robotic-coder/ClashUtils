@@ -42,18 +42,19 @@ async def currentwar(resp: Responder, tag, exclude, cwl_round, show_names):
 
 	embed = discord.Embed(title="War Map")
 	embed.set_footer(text=war.clan.tag+" vs "+war.opponent.tag)
+	if war.status == "won":
+		embed.colour = 65280 #00FF00
+	elif war.status == "lost":
+		embed.colour = 16711680 #FF0000
+	elif war.status == "tie":
+		embed.colour = 16711422 #FEFEFE
+	
 	if war.state == "preparation":
 		(content, lines) = await create_map_prep(resp.clash, war, bases, show_names)
 	else:
 		(content, lines) = create_map_battle(war, bases, exclude, show_names)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(content, embeds)
-
-async def find_current_war(tag, clash):
-	war = await clash.get_current_war(tag)
-	if war is None or (war is not None and war.is_cwl and war.state == "warEnded"):
-		war = await clash.get_current_war(tag, cwl_round=coc.WarRound.current_preparation)
-	return war
 	
 
 async def create_map_prep(clash, war, bases_input, show_names):
@@ -164,6 +165,7 @@ def create_map_battle(war, bases, exclusions, show_names):
 		clan_line = "`"+clan_name+pad_left(clan_dest, 4)+"` "+stars(clan_stars)+" "+str(emojis.th[clan_th])+"`"+clan_attacks
 		enemy_line = enemy_attacks+"`"+str(emojis.th[enemy_th])+" "+stars(enemy_stars)+" `"+pad_right(enemy_dest, 4)+enemy_name+"`"
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
+
 	return (content, lines)
 
 # Not used
@@ -185,8 +187,11 @@ def get_time_delta(start, end):
 
 	output = str(minutes)+"m"
 
-	if hours > 0: output = str(hours)+"h "+output
-	else: return output
+	if hours > 0:
+		if delta.days > 0: hours %= 24
+		output = str(hours)+"h "+output
+	else:
+		return output
 
 	if delta.days > 0: output = str(delta.days)+"d "+output
 	return output

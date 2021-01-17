@@ -79,7 +79,8 @@ async def net(resp: Responder, tag: str, show_details: bool):
 			else: marker = " "
 			lines.append("\u2066`"+rank+" "+star_score+"  "+destruction_score+" "+marker+member.name+"`")
 	
-	embed = discord.Embed(title=stats["clan_name"]+": CWL Net Gain after "+str(stats["num_rounds"])+" rounds")
+	embed = discord.Embed(title="CWL Net Gain after "+str(stats["num_rounds"])+" rounds")
+	embed.set_author(name=stats["clan"].name, url=stats["clan"].share_link, icon_url=stats["clan"].badge.small)
 	embed.set_footer(text=tag)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(embeds=embeds)
@@ -136,7 +137,8 @@ async def attacks(resp: Responder, tag: str, show_details: bool):
 			else: marker = " "
 			lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+" "+marker+member.name+"`")
 	
-	embed = discord.Embed(title=stats["clan_name"]+": CWL Average Attacks after "+str(stats["num_rounds"])+" rounds")
+	embed = discord.Embed(title="CWL Average Attacks after "+str(stats["num_rounds"])+" rounds")
+	embed.set_author(name=stats["clan"].name, url=stats["clan"].share_link, icon_url=stats["clan"].badge.small)
 	embed.set_footer(text=tag)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(embeds=embeds)
@@ -185,7 +187,8 @@ async def defenses(resp: Responder, tag: str, show_details: bool):
 			avg_destruction = pad_left(round_fixed(member.avg_defence_destruction, 1), 5)
 			lines.append("\u2066`"+rank+" "+avg_stars+" "+avg_destruction+"  "+member.name+"`")
 	
-	embed = discord.Embed(title=stats["clan_name"]+": CWL Average Defenses after "+str(stats["num_rounds"])+" rounds")
+	embed = discord.Embed(title="CWL Average Defenses after "+str(stats["num_rounds"])+" rounds")
+	embed.set_author(name=stats["clan"].name, url=stats["clan"].share_link, icon_url=stats["clan"].badge.small)
 	embed.set_footer(text=tag)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(embeds=embeds)
@@ -261,7 +264,7 @@ async def get_stats(tag: str, clash: coc.Client):
 				
 		return {
 			"members": members.values(),
-			"clan_name": [clan.name for clan in group.clans if clan.tag == tag][0],
+			"clan": [clan for clan in group.clans if clan.tag == tag][0],
 			"num_rounds": num_rounds
 		}
 	except coc.errors.NotFound:
@@ -326,13 +329,6 @@ def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 		description="Displays member CWL performance stats",
 		options=[{
 			"type": 3,
-			"name": "clan",
-			"description": "A clan tag or alias",
-			"example": "#8PQGQC8",
-			"required": True
-		},
-		{
-			"type": 3,
 			"name": "metric",
 			"description": "The data used to determine CWL performance: net (attacks-defenses), avg attacks or avg defenses",
 			"example": "net",
@@ -351,6 +347,13 @@ def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 					"value": "defenses"
 				}
 			]
+		},
+		{
+			"type": 3,
+			"name": "clan",
+			"description": "A clan tag or alias",
+			"example": "#8PQGQC8",
+			"required": True
 		},
 		{
 			"type": 3,

@@ -53,7 +53,8 @@ async def roster(resp: Responder, tag: str, show_names: bool):
 	for level, count in th_levels.items():
 		lines[0] += str(emojis.th[level])+"`"+str(count)+" `"
 	
-	embed = discord.Embed(title="CWL Roster for "+clan.name)
+	embed = discord.Embed(title="CWL Roster")
+	embed.set_author(name=clan.name, url=clan.share_link, icon_url=clan.badge.small)
 	embed.set_footer(text=tag)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(embeds=embeds)

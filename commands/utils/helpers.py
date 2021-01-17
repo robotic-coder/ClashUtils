@@ -25,7 +25,7 @@ def generate_embeds(lines: list, embed=discord.Embed()):
 		else: break
 
 	if len(lines) > 0:
-		next_embed = discord.Embed()
+		next_embed = discord.Embed(colour=embed.colour)
 		if embed.footer is not discord.Embed.Empty:
 			next_embed.set_footer(text=embed.footer.text, icon_url=embed.footer.icon_url)
 			embed.set_footer()
@@ -68,6 +68,12 @@ def resolve_clan_slash(tag_or_alias, ctx):
 	elif tag_or_alias in ctx._discord.global_aliases:
 		return ctx._discord.global_aliases[tag_or_alias]
 	else: return None
+
+async def find_current_war(tag: str, clash: coc.Client):
+	war = await clash.get_current_war(tag)
+	if war is None or (war is not None and war.is_cwl and war.state == "warEnded"):
+		war = await clash.get_current_war(tag, cwl_round=coc.WarRound.current_preparation)
+	return war
 
 def stars(num_stars):
 	output = ""
