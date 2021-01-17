@@ -36,7 +36,7 @@ def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(help_standard)
 
 	bot.add_slash_command(help_slash,
-		name="help",
+		name="cu-help",
 		description="Displays details about commands",
 		options=[{
 			"type": 3,
