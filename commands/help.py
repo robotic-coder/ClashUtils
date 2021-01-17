@@ -116,7 +116,7 @@ async def slash_send_command_list(resp, result):
 			if subs is not None and subs[1] == "list":
 				extras = " *("+", ".join(sorted(list(subs[0].keys())))+")*"
 			embed.add_field(name=cmd.name+extras, value=cmd.description, inline=False)
-	embed.set_footer(text="Use /help [command] to view more information about a specific command.")
+	embed.set_footer(text="Use /cu-help [command] to view more information about a specific command.")
 	await resp.send(embeds=[embed])
 
 """async def search_base(resp):
