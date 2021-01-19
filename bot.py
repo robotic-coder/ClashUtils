@@ -40,9 +40,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		self.storage = Storage(os.environ["DATABASE_URL"])
 
 		self.aliases = {}
-		self.global_aliases = {
-			"tombola": "#9LUR2PL9"
-		}
+		self.global_aliases = {}
 		aliases = self.storage.fetch_all_aliases()
 		for i in aliases:
 			del i["last_used"]
