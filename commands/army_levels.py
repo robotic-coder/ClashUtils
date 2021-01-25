@@ -46,6 +46,7 @@ async def levels(resp, tag, name):
 		embed.set_footer(text="These members are able to activate the "+unit.name+", but don't necessarily have it active.")
 	else: min = ""
 	embed.set_author(name=clan.name, url=clan.share_link, icon_url=clan.badge.small)
+	embed.set_footer(text=tag)
 	embed.title = unit.name+" Levels ("+min+"max "+str(unit.max)+")"
 
 	if len(lines) == 0:
