@@ -1,6 +1,7 @@
 import discord
 import discord.ext.commands
 import re
+from math import floor, ceil
 from commands.utils.helpers import *
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
@@ -11,23 +12,43 @@ lightning_damage = ( 150, 180, 210, 240, 270, 320, 400, 480, 560 )
 shield_damage = ( 1260, 1460, 1660, 1860, 1960 )
 
 async def damage(resp: Responder, building_hp: str, spell_list: str):
-	print(spell_list)
 	spell_checker = re.match("^(((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-5])))((, )|$))+)", spell_list)
 	if spell_checker is None:
 		return await resp.send("Invalid syntax.\nExample: /damage **hp:** 4000 **items:** 1x earthquake5, 5x lightning9, 1x shield4")
 	
+	spells = spell_list.split(", ")
+	if len(spells) >= 14:
+		return await resp.send("You can't use more than 14 spells!")
+	
+	result = calculate(building_hp, spells, calc_rounding_function=floor)
+	if result is None:
+		await resp.send("You can't use Seeking Shield more than once!")
+	(damage_floor, embed_floor) = result
+	(damage_float, embed_float) = calculate(building_hp, spells, display_rounding_function=round_two_places)
+	(damage_ceil, embed_ceil) = calculate(building_hp, spells, calc_rounding_function=ceil)
+	
+	if float(damage_floor) >= float(building_hp):
+		await resp.send("Total: "+str(damage_floor)+" points ✅", [embed_floor])
+	elif float(damage_ceil) >= float(building_hp):
+		notice = "I don't know exactly how Clash applies rounding when calculating building damage. You'll need to test this one for yourself."
+		embed_ceil.title = "Best Case Scenario (Rounding Up): "+str(damage_ceil)+" points ✅"
+		embed_float.title = "No Rounding: "+round_two_places(damage_float)+" points "+("✅" if float(damage_float) >= float(building_hp) else "❌")
+		embed_floor.title = "Worst Case Scenario (Rounding Down): "+str(damage_floor)+" points ❌"
+		await resp.send(notice, [embed_ceil, embed_float, embed_floor])
+	else:
+		await resp.send("Total: "+str(damage_floor)+" points ❌", [embed_floor])
+
+def calculate(building_hp, spell_list, calc_rounding_function=lambda x: x, display_rounding_function=str):
+	total_damage = 0
 	total_damage = 0
 	earthquake_count = 0
 	shield_count = 0
 	last_earthquake_level = None
 
-	embed = discord.Embed()
+	embed = discord.Embed(title="Damage Breakdown")
+	embed.set_footer(text="Target building HP: "+str(building_hp)+" points")
 
-	spells = spell_list.split(", ")
-	if len(spells) >= 14:
-		return await resp.send("You can't use more than 14 spells!")
-	
-	for spell in spells:
+	for spell in spell_list:
 		spell_params = re.match("^(\d+)x ([A-Za-z]*)(\d+)$", spell)
 		quantity = int(spell_params.group(1))
 		name = spell_params.group(2)
@@ -41,18 +62,18 @@ async def damage(resp: Responder, building_hp: str, spell_list: str):
 
 			elif name == "earthquake":
 				percent = earthquake_damage[level-1]
-				divisor = ((2*earthquake_count)+1)
-				effect = (float(building_hp) * percent / float(divisor))
+				divisor = (2*earthquake_count)+1
+				effect = calc_rounding_function(float(building_hp) * (percent / float(divisor)))
 				total_damage += effect
 				earthquake_count += 1
 
-				damage = str(building_hp)+" x "+round_fixed(percent*100, 1)+"% ÷ "+str(divisor)+" = "+round_fixed(effect, 2)+" points"
+				damage = str(building_hp)+" x "+round_fixed(percent*100, 1)+"% ÷ "+str(divisor)+" = "+display_rounding_function(effect)+" points"
 				embed.add_field(name=str(emojis.spells["earthquake"])+" Earthquake Spell level "+str(level), value=damage, inline=False)
 
 				if earthquake_count == 1:
 					last_earthquake_level = level
 				elif last_earthquake_level != level:
-					embed.description = "To maximise damage when using Earthquake Spells with different levels, use them in order of highest to lowest level."
+					embed.description = "To maximise damage when using different levels of Earthquake Spells, use them in order of highest to lowest level."
 			
 			elif name == "shield":
 				total_damage += shield_damage[level-1]
@@ -62,18 +83,12 @@ async def damage(resp: Responder, building_hp: str, spell_list: str):
 					damage = str(shield_damage[level-1])+" points"
 					embed.add_field(name=str(emojis.heroes["champion"])+" Seeking Shield level "+str(level), value=damage, inline=False)
 				else:
-					return await resp.send("You can't use Seeking Shield twice!")
-	if earthquake_count > 1:
-		embed.set_footer(text="This result may be off by a few points, because the fine details of how Clash combines damage from multiple Earthquake Spells (for example, how much rounding is used) is unknown.")
-	
-	if float(total_damage) >= float(building_hp): marker = "✅"
-	else: marker = "❌"
+					return None
 
-	embed.title = "Damage Breakdown"
-	await resp.send("Total: "+round_fixed(total_damage, 2)+" points "+marker, [embed])
+	return (total_damage, embed)
 
-
-
+def round_two_places(x: float):
+	return round_fixed(x, 2)
 
 @discord.ext.commands.command(
 	name = "damage",
