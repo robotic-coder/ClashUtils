@@ -1,6 +1,7 @@
 import discord.ext.commands
 from commands.utils.helpers import *
 
+import commands.cwl.leaderboard as leaderboard
 import commands.cwl.performance as performance
 import commands.cwl.roster as roster
 
@@ -15,6 +16,7 @@ async def cwl_standard(ctx: discord.ext.commands.Context):
 		return
 
 def setup(bot: discord.ext.commands.Bot):
+	leaderboard.setup(bot, cwl_standard)
 	performance.setup(bot, cwl_standard)
 	roster.setup(bot, cwl_standard)
 
