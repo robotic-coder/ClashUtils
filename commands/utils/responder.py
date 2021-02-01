@@ -40,6 +40,8 @@ class Responder():
 			await self._loading.__aenter__()
 
 	async def __aexit__(self, err_type, err_value, traceback):
+		if err_value is not None:
+			await self.send("An error occurred!\nError details: `"+str(err_value)+"`")
 		if self._loading is not None:
 			await self._loading.__aexit__(err_type, err_value, traceback)
 
