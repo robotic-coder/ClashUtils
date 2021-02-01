@@ -6,7 +6,9 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 
-async def maxscore(resp: Responder, tag: str):
+max_th_level = 13
+
+async def maxscore(resp: Responder, tag: str, reach: str):
 	tag = resp.resolve_clan(tag)
 	if tag is None:
 		return await resp.send("Invalid clan tag or alias")
@@ -16,37 +18,43 @@ async def maxscore(resp: Responder, tag: str):
 		clan = await resp.clash.get_clan(tag)
 		await resp.send(clan.name+" ("+tag+") is not in war.")
 
-	await resp.send(embeds=[make_embed(war, "clan", "opponent"), make_embed(war, "opponent", "clan")])
+	await resp.send(embeds=[make_embed(war, "clan", "opponent", reach), make_embed(war, "opponent", "clan", reach)])
 
-def make_embed(war, friendly_name, enemy_name):
+def make_embed(war: coc.ClanWar, friendly_name: str, enemy_name: str, reach: str):
 	friendly_side: coc.WarClan = getattr(war, friendly_name)
 	enemy_side: coc.WarClan = getattr(war, enemy_name)
 	
-	making_embed_for_home_clan = friendly_name == "clan"
-
 	embed = discord.Embed()
 	embed.set_author(name=friendly_side.name, url=friendly_side.share_link, icon_url=friendly_side.badge.small)
 	embed.set_footer(text=friendly_side.tag)
+
 	enemy_bases = sorted(enemy_side.members, key=sort_bases)
 	if war.type == "cwl": max_attacks = 1
 	else: max_attacks = 2
 
-	attacks_remaining = []
-	for i in range(13+1):
-		attacks_remaining.append(0)
-	for member in friendly_side.members:
-		attacks_remaining[member.town_hall] += max_attacks-len(member.attacks)
+	no_attacks = friendly_side.attacks_used == war.team_size*max_attacks
+	perfect_war = friendly_side.stars == war.team_size*3
+	if no_attacks or perfect_war:
+		embed.description = "Stars: "+str(friendly_side.stars)+"\nDestruction: "+round_fixed(friendly_side.destruction, 2)
+		embed.title = "Perfect War!" if perfect_war else "No Attacks Remaining"
+		return embed
 
-	remaining_list = ""
-	for i in reversed(range(2, 13+1)):
-		if attacks_remaining[i] > 0:
-			remaining_list += str(emojis.th[i])+"`"+str(attacks_remaining[i])+" `"
-	if remaining_list == "": remaining_list = "none"
+	attacks_remaining = []
+	for i in range(max_th_level+1):
+		attacks_remaining.append({
+			"viable": reach == "unlimited",
+			"original_count": 0,
+			"running_count": 0
+		})
+	for member in friendly_side.members:
+		attacks_remaining[member.town_hall]["original_count"] += max_attacks-len(member.attacks)
+		attacks_remaining[member.town_hall]["running_count"] += max_attacks-len(member.attacks)
 
 	extra_stars = 0
 	extra_destruction = 0
 	viable_bases = ""
-	for i in range(min(25, war.team_size, war.team_size*max_attacks-friendly_side.attacks_used)):
+	num_viable = 0
+	for i in range(min(war.team_size, war.team_size*max_attacks-friendly_side.attacks_used)):
 		base = enemy_bases[i]
 		if base.best_opponent_attack is not None:
 			current_stars = base.best_opponent_attack.stars
@@ -55,25 +63,45 @@ def make_embed(war, friendly_name, enemy_name):
 			current_stars = 0
 			current_destruction = 0
 		if current_stars == 3: continue
+		if can_be_attacked(base, attacks_remaining, reach) == False: continue
+		
 		extra_stars += 3-current_stars
 		extra_destruction += (100-current_destruction)/war.team_size
-		if making_embed_for_home_clan:
+		if friendly_name == "clan":
 			viable_bases += "`"+pad_left(base.map_position, 2)+"` "+str(emojis.th[base.town_hall])+" "+stars(current_stars)+" `"+pad_left(current_destruction, 3)+"%`\n"
 		else:
 			viable_bases += "`"+pad_left(current_destruction, 3)+"%` "+stars(current_stars)+" "+str(emojis.th[base.town_hall])+" `"+pad_left(base.map_position, 2)+"`\n"
+		if num_viable == 25: break
 	
+	remaining_list = ""
+	ignored_list = ""
+	for i in reversed(range(2, max_th_level+1)):
+		if attacks_remaining[i]["original_count"] > 0:
+			addition = str(emojis.th[i])+"`"+str(attacks_remaining[i]["original_count"])+" `"
+			if attacks_remaining[i]["viable"]:
+				remaining_list += addition
+			else:
+				ignored_list += addition
+	if remaining_list == "": remaining_list = "none"
+	if ignored_list == "": ignored_list = "none"
+
+
 	if extra_stars > 0:
+		if reach == "unlimited" or ignored_list == "none":
+			embed.add_field(name="Attacks Remaining", value=remaining_list, inline=False)
+		else:
+			embed.add_field(name="Viable Attacks Remaining", value=remaining_list, inline=False)
+			embed.add_field(name="Unviable Attacks Remaining", value=ignored_list, inline=False)
+		
 		stars_line = "Stars: "+str(friendly_side.stars)+" + "+str(extra_stars)+" = "+str(friendly_side.stars+extra_stars)
 		destruction_line = "Destruction: "+round_fixed(friendly_side.destruction, 2)+" + "+round_fixed(extra_destruction, 2)+" = "+round_fixed(friendly_side.destruction+extra_destruction, 2)
-		embed.add_field(name="Attacks Remaining", value=remaining_list, inline=False)
 		embed.add_field(name="Maximum Possible Score", value=stars_line+"\n"+destruction_line, inline=False)
 		embed.add_field(name="To get the maximum score, this clan must 3-star the bases below:", value=viable_bases, inline=False)
 	else:
+		embed.title = "No Attacks Remaining" if ignored_list == "none" else "No Viable Attacks Remaining"
 		embed.description = "Stars: "+str(friendly_side.stars)+"\nDestruction: "+round_fixed(friendly_side.destruction, 2)
-		if friendly_side.stars == war.team_size*3:
-			embed.title = "Perfect War!"
-		else:
-			embed.title = "No Attacks Remaining"
+		if ignored_list != "none":
+			embed.add_field(name="Unviable Attacks Remaining", value=ignored_list, inline=False)
 
 	return embed
 
@@ -86,7 +114,15 @@ def sort_bases(base):
 		destruction = 0
 	return (stars, destruction, base.map_position*-1)
 
-
+def can_be_attacked(base: coc.ClanWarMember, attacks_remaining: dict, reach: str):
+	if reach == "unlimited": return True
+	min_attacker_th = base.town_hall if reach == "none" else base.town_hall-1
+	for i in range(min_attacker_th, max_th_level+1):
+		if attacks_remaining[i]["running_count"] > 0:
+			attacks_remaining[i]["running_count"] -= 1
+			attacks_remaining[i]["viable"] = True
+			return True
+	return False
 
 
 
@@ -106,7 +142,7 @@ async def maxscore_standard(ctx: discord.ext.commands.Context, *args):
 		return
 	resp = StandardResponder(ctx)
 	async with resp:
-		await maxscore(resp, args[0])
+		await maxscore(resp, args[0], "1 level")
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(maxscore_standard)
@@ -119,10 +155,31 @@ def setup(bot: discord.ext.commands.Bot):
 			"description": "A clan tag or alias",
 			"example": "#8PQGQC8",
 			"required": True
+		},
+		{
+			"type": 3,
+			"name": "reach",
+			"description": "How many TH levels higher you expect members to be able to 3 star. Defaults to 1 level if omitted.",
+			"example": "none",
+			"required": False,
+			"choices": [
+				{
+					"name": "none",
+					"value": "none"
+				},
+				{
+					"name": "1 level",
+					"value": "1 level"
+				},
+				{
+					"name": "unlimited",
+					"value": "unlimited"
+				}
+			]
 		}]
 	)
 
-async def maxscore_slash(ctx: SlashContext, tag):
+async def maxscore_slash(ctx: SlashContext, tag, reach="1 level"):
 	resp = SlashResponder(ctx)
 	async with resp:
-		await maxscore(resp, tag)
+		await maxscore(resp, tag, reach)
