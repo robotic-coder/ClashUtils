@@ -9,7 +9,7 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 		
-async def currentwar(resp: Responder, tag, exclude, cwl_round, show_names):
+async def currentwar(resp: Responder, tag: str, show_names: bool, num_attacks: int, cwl_round: int):
 	tag = resp.resolve_clan(tag)
 	if tag is None:
 		await resp.send("Invalid clan tag or alias")
@@ -23,6 +23,10 @@ async def currentwar(resp: Responder, tag, exclude, cwl_round, show_names):
 		elif war.state == "notInWar":
 			clan = await resp.clash.get_clan(tag)
 			return await resp.send(clan.name+" ("+tag+") is not in war.")
+		elif war.type != "friendly" and num_attacks is not None:
+			print(num_attacks)
+			clan = await resp.clash.get_clan(tag)
+			return await resp.send(clan.name+" ("+tag+") is not in a friendly war.")
 	else:
 		group = await resp.clash.get_league_group(tag)
 		if group is None:
@@ -52,7 +56,10 @@ async def currentwar(resp: Responder, tag, exclude, cwl_round, show_names):
 	if war.state == "preparation":
 		(content, lines) = await create_map_prep(resp.clash, war, bases, show_names)
 	else:
-		(content, lines) = create_map_battle(war, bases, exclude, show_names)
+		result = create_map_battle(war, bases, show_names, num_attacks)
+		if result is None:
+			return await resp.send("This clan's war allows members to make 2 attacks.")
+		(content, lines) = result
 	embeds = generate_embeds(lines, embed)
 	await resp.send(content, embeds)
 	
@@ -108,16 +115,13 @@ async def create_map_prep(clash, war, bases_input, show_names):
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 	return (content, lines)
 
-def create_map_battle(war, bases, exclusions, show_names):
-	if war.type == "cwl": max_attacks = 1
-	else: max_attacks = 2
-
-	if exclusions is not None:
-		params = re.match("/^((\d+[a,b]\d)((, )|$))+/", exclusions)
-		if params is None:
-			print("Failed regex")
-			return
-		war = exclude_attacks(war, exclusions)
+def create_map_battle(war, bases, show_names, max_attacks):
+	if max_attacks is not None:
+		max_attacks = int(max_attacks)
+	elif war.type == "cwl":
+		max_attacks = 1
+	else:
+		max_attacks = 2
 
 	if war.state == "inWar":
 		state = get_time_delta(war.end_time.now, war.end_time.time)+" remaining"
@@ -135,6 +139,9 @@ def create_map_battle(war, bases, exclusions, show_names):
 
 	lines = []
 	for index, base in enumerate(bases):
+		if len(base["clan"].attacks) > max_attacks or len(base["enemy"].attacks) > max_attacks:
+			return None
+
 		clan_name = ""
 		clan_stars = 0
 		clan_dest = ""
@@ -167,14 +174,6 @@ def create_map_battle(war, bases, exclusions, show_names):
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 
 	return (content, lines)
-
-# Not used
-def exclude_attacks(war, exclusions):
-	remove = []
-	for x in exclusions.split(", "):
-		param = re.match("/^((\d+)([a,b])(\d)/", x)
-		
-	return war
 
 def get_time_delta(start, end):
 	delta = end-start
@@ -213,7 +212,7 @@ async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
 		return
 	resp = StandardResponder(ctx)
 	async with resp:
-		await currentwar(resp, args[0], None, None, False)
+		await currentwar(resp, args[0], False, None, None)
 
 def setup(bot: discord.ext.commands.Bot):
 	bot.add_command(currentwar_standard)
@@ -227,13 +226,6 @@ def setup(bot: discord.ext.commands.Bot):
 			"description": "A clan tag or alias",
 			"example": "#8PQGQC8",
 			"required": True
-		},
-		{
-			"type": 4,
-			"name": "cwl-round",
-			"description": "A specific CWL round to fetch. The war must be in preparation or a later stage.",
-			"example": "6",
-			"required": False
 		},
 		{
 			"type": 3,
@@ -251,19 +243,52 @@ def setup(bot: discord.ext.commands.Bot):
 					"value": "compact"
 				}
 			]
+		},
+		{
+			"type": 3,
+			"name": "num-attacks",
+			"description": "[Friendly Wars Only] The number of attacks players are able to make.",
+			"example": "1",
+			"required": False,
+			"choices": [
+				{
+					"name": "1",
+					"value": "1"
+				},
+				{
+					"name": "2",
+					"value": "2"
+				}
+			]
+		},
+		{
+			"type": 4,
+			"name": "cwl-round",
+			"description": "[CWL Only] A specific CWL round (must have already started prep). Fetches current day if omitted.",
+			"example": "6",
+			"required": False
 		}]
 	)
 
-async def currentwar_slash(ctx: SlashContext, tag, cwl_round=None, size="compact"):
-	"""if exclude is int:
-		cwl_round = exclude
-		exclude = None
-	elif exclude == "full" or exclude == "compact":
-		size = exclude
-		exclude = None"""
-	if cwl_round == "full" or cwl_round == "compact":
-		size = cwl_round
-		cwl_round = None
+
+async def currentwar_slash(ctx: SlashContext, tag, size="compact", num_attacks=None, cwl_round=None):
+	if isinstance(num_attacks, int):
+		#tag, size, cwl_round
+		cwl_round = num_attacks
+		num_attacks = None
+	if size != "compact" and size != "full":
+		if isinstance(size, str):
+			#tag, num_attacks
+			num_attacks = size
+			size = "compact"
+		elif isinstance(size, int):
+			#tag, cwl_round
+			cwl_round = size
+			size = "compact"
+
 	resp = SlashResponder(ctx)
+	if num_attacks is not None and cwl_round is not None:
+		await resp.send("You cannot use `num-attacks` and `cwl-round` together.")
+		return
 	async with resp:
-		await currentwar(resp, tag, None, cwl_round, size == "full")
+		await currentwar(resp, tag, size == "full", num_attacks, cwl_round)
