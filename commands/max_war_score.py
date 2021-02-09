@@ -36,7 +36,9 @@ def make_embed(war: coc.ClanWar, friendly_name: str, enemy_name: str, reach: str
 	embed.set_author(name=friendly_side.name, url=friendly_side.share_link, icon_url=friendly_side.badge.small)
 	embed.set_footer(text=friendly_side.tag)
 
-	for (index, base) in enumerate(enemy_side.members):
+	for (index, base) in enumerate(sorted(enemy_side.members, key=lambda x: x.map_position)):
+		# Unsure of why this first sort is needed, but it is necessary for correct output.
+		# The enemy side list seems to be scrambled when making the 2nd embed. The friendly side list is not sorted while making the first embed so it is unclear why this happens.
 		base.map_position = index+1
 	enemy_bases = sorted(enemy_side.members, key=sort_bases)
 	if max_attacks is None: max_attacks = 2
@@ -151,10 +153,9 @@ def can_be_attacked(base: coc.ClanWarMember, attacks_remaining: dict, reach: str
 	help = "#8PQGQC8"
 )
 async def maxscore_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) != 1:
-		await send_command_help(ctx, maxscore)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
 		await maxscore(resp, args[0], "1 level", None)
 
