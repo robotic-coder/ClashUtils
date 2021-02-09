@@ -5,15 +5,16 @@ import psycopg2
 from commands.utils.helpers import *
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
+from commands.utils.help import *
 
 @discord.ext.commands.group(
 	description = "Manages aliases that can be used in place of clan tags.",
 	brief = "Manages aliases that can be used in place of clan tags."
 )
 async def alias(ctx: discord.ext.commands.Context):
+	resp = StandardResponder(ctx)
 	if ctx.invoked_subcommand is None:
-		await send_command_list(ctx, alias)
-		return
+		return await resp.send(embeds=[get_standard_command_list(alias)])
 
 async def add(resp: Responder, alias_name: str, tag: str):
 	if resp.author is None:
@@ -75,10 +76,9 @@ async def _list(resp: Responder):
 	help = "myclan #8PQGQC8"
 )
 async def add_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) != 2:
-		await send_command_help(ctx, add_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 2:
+		return await resp.send_help()
 	async with resp:
 		await add(resp, args[0], args[1])
 
@@ -90,10 +90,9 @@ async def add_standard(ctx: discord.ext.commands.Context, *args):
 	help = "myclan"
 )
 async def remove_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) != 1:
-		await send_command_help(ctx, remove_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	await remove(resp, args[0])
 
 @alias.command(
@@ -104,10 +103,9 @@ async def remove_standard(ctx: discord.ext.commands.Context, *args):
 	help = ""
 )
 async def list_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) > 0:
-		await send_command_help(ctx, list_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) > 0:
+		return await resp.send_help()
 	async with resp:
 		await _list(resp)
 

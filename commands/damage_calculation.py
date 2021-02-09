@@ -14,7 +14,7 @@ shield_damage = ( 1260, 1460, 1660, 1860, 1960 )
 async def damage(resp: Responder, building_hp: str, spell_list: str):
 	spell_checker = re.match("^(((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-5])))((, )|$))+)", spell_list)
 	if spell_checker is None:
-		return await resp.send("Invalid syntax.\nExample: /damage **hp:** 4000 **items:** 1x earthquake5, 5x lightning9, 1x shield4")
+		return await resp.send_help("Invalid syntax.")
 	
 	spells = spell_list.split(", ")
 	if len(spells) >= 14:
@@ -98,10 +98,9 @@ def round_two_places(x: float):
 	help = "4800 6x lightning8, 1x earthquake5, 1x shield5, 1x lightning9"
 )
 async def damage_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 3:
-		await send_command_help(ctx, damage_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) < 3:
+		return await resp.send_help()
 	await damage(resp, args[0], " ".join(args[1:]))
 
 def setup(bot: discord.ext.commands.Bot):

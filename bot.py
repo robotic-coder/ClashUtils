@@ -17,7 +17,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 	def __init__(self):
 		super().__init__(
 			command_prefix="//",
-			activity=discord.Activity(type=discord.ActivityType.watching, name="for //help")
+			activity=discord.Activity(type=discord.ActivityType.watching, name="for /help-cu")
 		)
 
 		if os.environ["ENVIRONMENT"] == "live":
@@ -58,6 +58,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 	async def on_ready(self):
 		print("Logged in as "+str(self.user))
 		emojis.setup(self)
+		
 		self.slash = SlashCommand(self, auto_register=True, auto_delete=True)
 
 		extensions = [

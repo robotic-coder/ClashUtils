@@ -78,10 +78,9 @@ async def leaderboard(resp: Responder, tag: str, after_round: int):
 	help = "#8PQGQC8"
 )
 async def leaderboard_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) != 1:
-		await send_command_help(ctx, leaderboard_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
 		await leaderboard(resp, args[0], None)
 

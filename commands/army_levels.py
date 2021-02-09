@@ -120,10 +120,9 @@ async def init_army_details(clash: coc.Client):
 	help = "#8PQGQC8 sneaky goblin"
 )
 async def levels_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 2:
-		await send_command_help(ctx, levels_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) < 2:
+		return await resp.send_help()
 	async with resp:
 		await levels(resp, args[0], " ".join(args[1:]))
 

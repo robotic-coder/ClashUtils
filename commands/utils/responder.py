@@ -1,5 +1,6 @@
 import discord
 import discord.ext.commands
+import commands.utils.help as help
 from discord_slash import SlashCommand, SlashContext
 	
 class Responder():
@@ -23,6 +24,9 @@ class Responder():
 			return (element, element.id)
 
 	async def send(self, content="", embeds=[]):
+		pass
+
+	async def send_help(self, error=""):
 		pass
 
 	def resolve_clan(self, input: str):
@@ -61,6 +65,10 @@ class StandardResponder(Responder):
 		else:
 			return []
 
+	async def send_help(self, error=""):
+		lookup = self._ctx.command.qualified_name.split(" ")
+		return await self.send(content=error, embeds=[help.get_help_standard(self.bot, *lookup)])
+
 class SlashResponder(Responder):
 	def __init__(self, ctx: SlashContext):
 		super().__init__(ctx, ctx._discord)
@@ -73,12 +81,31 @@ class SlashResponder(Responder):
 			self.__loading_message_sent = False
 
 	async def __send(self, content, embeds):
-		if len(embeds) > 10:
+		size = 0
+		i = 0
+		while i < len(embeds) and size+len(embeds[i]) <= 6000 and i+1 <= 10:
+			size += len(embeds[i])
+			i += 1
+		await self._ctx.send(content=content, embeds=embeds[:i])
+		if i < len(embeds):
+			await self.__send("", embeds[i:])
+		return []
+
+		"""if len(embeds) > 10:
 			await self._ctx.send(content=content, embeds=embeds[:10])
 			await self.__send("", embeds[10:])
 		elif len(embeds) > 0 or len(content) > 0:
 			await self._ctx.send(content=content, embeds=embeds)
-		return []
+
+		return []"""
+
+	async def send_help(self, error=""):
+		lookup = self._ctx.name
+		if self._ctx.subcommand_group is not None:
+			lookup += " "+self._ctx.subcommand_group
+		if self._ctx.subcommand_name is not None:
+			lookup += " "+self._ctx.subcommand_name
+		return await self.send(content=error, embeds=[help.get_help_slash(self.bot, lookup)])
 
 	async def __aenter__(self):
 		if self.author is None and self.author_id is not None and self.guild is not None:

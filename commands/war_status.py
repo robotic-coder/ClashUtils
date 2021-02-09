@@ -207,10 +207,9 @@ def get_time_delta(start, end):
 	help = "#8PQGQC8"
 )
 async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) != 1:
-		await send_command_help(ctx, currentwar_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
 		await currentwar(resp, args[0], False, None, None)
 

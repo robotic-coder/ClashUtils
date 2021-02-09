@@ -4,6 +4,7 @@ import coc
 import commands.utils.emojis as emojis
 from commands.utils.helpers import *
 from commands.utils.responder import *
+from commands.utils.help import *
 
 @discord.ext.commands.group(
 	name = "performance",
@@ -11,9 +12,9 @@ from commands.utils.responder import *
 	brief = "Displays member CWL performance stats."
 )
 async def performance_standard(ctx: discord.ext.commands.Context):
+	resp = StandardResponder(ctx)
 	if ctx.invoked_subcommand is None:
-		await send_command_list(ctx, performance_standard)
-		return
+		return await resp.send(embeds=[get_standard_command_list(performance_standard)])
 
 async def performance(resp: Responder, tag: str, metric: str, show_details: bool):
 	if metric == "net":
@@ -283,12 +284,11 @@ async def get_stats(tag: str, clash: coc.Client):
 	help = "#8PQGQC8"
 )
 async def net_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
-		await send_command_help(ctx, net_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
-		await net(resp, args[0], len(args)==2 and args[1]=="full")
+		await net(resp, args[0], False)
 
 @performance_standard.command(
 	name="attacks",
@@ -298,12 +298,11 @@ async def net_standard(ctx: discord.ext.commands.Context, *args):
 	help = "#8PQGQC8"
 )
 async def attacks_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
-		await send_command_help(ctx, attacks_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
-		await attacks(resp, args[0], len(args)==2 and args[1]=="full")
+		await attacks(resp, args[0], False)
 
 @performance_standard.command(
 	name="defenses",
@@ -313,12 +312,11 @@ async def attacks_standard(ctx: discord.ext.commands.Context, *args):
 	help = "#8PQGQC8"
 )
 async def defenses_standard(ctx: discord.ext.commands.Context, *args):
-	if len(args) < 1 or len(args) > 2:
-		await send_command_help(ctx, defenses_standard)
-		return
 	resp = StandardResponder(ctx)
+	if len(args) != 1:
+		return await resp.send_help()
 	async with resp:
-		await defenses(resp, args[0], len(args)==2 and args[1]=="full")
+		await defenses(resp, args[0], False)
 
 def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
 	group.add_command(performance_standard)
