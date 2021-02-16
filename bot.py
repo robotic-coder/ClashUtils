@@ -26,7 +26,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		else:
 			self.command_guild_ids = [
 				738656460430377013, #main guild
-				789297914446348299 # slash-only guild
+				789297914446348299 #slash-only guild
 			]
 			self.slash_command_prefix = "dev-"
 
@@ -59,7 +59,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		print("Logged in as "+str(self.user))
 		emojis.setup(self)
 		
-		self.slash = SlashCommand(self, auto_register=True, auto_delete=True)
+		self.slash = SlashCommand(self)
 
 		extensions = [
 			#"commands.about",
@@ -75,6 +75,9 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		]
 		for extension in extensions:
 			self.load_extension(extension)
+
+		await self.slash.sync_all_commands(True)
+		print("Completed setup")
 	
 	async def on_message(self, message):
 		if message.author.bot: return
@@ -105,13 +108,32 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		if len(self.aliases[snowflake].items()) == 0:
 			del self.aliases[snowflake]
 
-	def add_slash_command(self, cmd, name=None, description=None, options=None):
-		self.slash.add_slash_command(cmd, self.slash_command_prefix+name, description, None, self.command_guild_ids, self.strip_options(options), False)
+	def add_slash_command(self, cmd, name=None, description=None, options=None, connector=None):
+		self.slash.add_slash_command(
+			cmd = cmd,
+			name = self.slash_command_prefix+name,
+			description = description,
+			guild_ids = self.command_guild_ids,
+			options = self.strip_options(options),
+			connector = connector,
+			has_subcommands = False
+		)
 		cmd_name = cmd.__name__ if name is None else name
 		self.slash_command_options[self.slash_command_prefix+cmd_name] = options
 
-	def add_slash_subcommand(self, cmd, base, subcommand_group=None, name=None, description=None, base_description=None, subcommand_group_description=None, options=None):
-		self.slash.add_subcommand(cmd, self.slash_command_prefix+base, subcommand_group, name, description, base_description, subcommand_group_description, None, self.command_guild_ids, self.strip_options(options))
+	def add_slash_subcommand(self, cmd, base, subcommand_group=None, name=None, description=None, base_description=None, subcommand_group_description=None, options=None, connector=None):
+		self.slash.add_subcommand(
+			cmd = cmd,
+			base = self.slash_command_prefix+base,
+			subcommand_group = subcommand_group,
+			name = name,
+			description = description,
+			base_description = base_description,
+			subcommand_group_description = subcommand_group_description,
+			guild_ids = self.command_guild_ids,
+			options = self.strip_options(options),
+			connector = connector
+		)
 		group = " " if subcommand_group is None else " "+subcommand_group+" "
 		cmd_name = cmd.__name__ if name is None else name
 		self.slash_command_options[self.slash_command_prefix+base+group+cmd_name] = options

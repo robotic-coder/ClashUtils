@@ -4,24 +4,21 @@ import commands.utils.help as help
 from discord_slash import SlashCommand, SlashContext
 	
 class Responder():
-	def __init__(self, ctx, bot):
+	def __init__(self, ctx):
 		self._ctx = ctx
-		self.bot = bot
-		self.clash = bot.clash
+		self.bot = ctx.bot
+		self.clash = ctx.bot.clash
 
-		(self.author, self.author_id) = self.__get_details(ctx.author)
-		(self.channel, self.channel_id) = self.__get_details(ctx.channel)
-		(self.guild, self.guild_id) = self.__get_details(ctx.guild)
+		self.author = ctx.author
+		self.author_id: int
+		self.channel = ctx.channel
+		self.channel_id: int
+		self.guild = ctx.guild
+		self.guild_id: int
 
 		if self.channel is not None:
-			self._loading = ctx.channel.typing()
+			self._loading = self.channel.typing()
 		else: self._loading = None
-
-	def __get_details(self, element):
-		if element is None or isinstance(element, int):
-			return (None, element)
-		else:
-			return (element, element.id)
 
 	async def send(self, content="", embeds=[]):
 		pass
@@ -40,8 +37,15 @@ class Responder():
 		else: return None
 		
 	async def __aenter__(self):
-		if self._loading is not None:
+		if self._loading is None:
+			return False
+		
+		try:
 			await self._loading.__aenter__()
+			return True
+		except discord.errors.Forbidden:
+			self._loading = None
+			return False
 
 	async def __aexit__(self, err_type, err_value, traceback):
 		if err_value is not None:
@@ -51,8 +55,10 @@ class Responder():
 
 class StandardResponder(Responder):
 	def __init__(self, ctx: discord.ext.commands.Context):
-		super().__init__(ctx, ctx.bot)
-		self._loading = ctx.channel.typing()
+		super().__init__(ctx)
+		self.author_id = ctx.author.id
+		self.channel_id = ctx.channel.id
+		self.guild_id = ctx.guild.id
 
 	async def send(self, content="", embeds=[]):
 		if len(embeds) > 0:
@@ -71,14 +77,18 @@ class StandardResponder(Responder):
 
 class SlashResponder(Responder):
 	def __init__(self, ctx: SlashContext):
-		super().__init__(ctx, ctx._discord)
-		self.__loading_message_sent = False
+		super().__init__(ctx)
+		self.__loading_message = None
+		self.author_id = ctx.author_id
+		self.channel_id = ctx.channel_id
+		self.guild_id = ctx.guild_id
 
 	async def send(self, content="", embeds=[]):
-		await self.__send(content, embeds)
-		if self.__loading_message_sent:
-			await self._ctx.delete()
-			self.__loading_message_sent = False
+		output = await self.__send(content, embeds)
+		if self.__loading_message is not None:
+			await self.__loading_message.delete()
+			self.__loading_message = None
+		return output
 
 	async def __send(self, content, embeds):
 		size = 0
@@ -86,10 +96,11 @@ class SlashResponder(Responder):
 		while i < len(embeds) and size+len(embeds[i]) <= 6000 and i+1 <= 10:
 			size += len(embeds[i])
 			i += 1
-		await self._ctx.send(content=content, embeds=embeds[:i])
+		message = await self._ctx.send(content=content, embeds=embeds[:i])
 		if i < len(embeds):
-			await self.__send("", embeds[i:])
-		return []
+			output = await self.__send("", embeds[i:])
+			return [message]+output
+		else: return [message]
 
 		"""if len(embeds) > 10:
 			await self._ctx.send(content=content, embeds=embeds[:10])
@@ -100,22 +111,23 @@ class SlashResponder(Responder):
 		return []"""
 
 	async def send_help(self, error=""):
-		lookup = self._ctx.name
-		if self._ctx.subcommand_group is not None:
-			lookup += " "+self._ctx.subcommand_group
-		if self._ctx.subcommand_name is not None:
-			lookup += " "+self._ctx.subcommand_name
-		return await self.send(content=error, embeds=[help.get_help_slash(self.bot, lookup)])
+		return await self.send(content=error, embeds=[help.get_help_slash(self.bot, self.__command)])
+
+	async def send_command(self, params):
+		await self._ctx.send_hidden("Your command (if you want to copy it on mobile):")
+		await self._ctx.send_hidden("/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]))
 
 	async def __aenter__(self):
-		if self.author is None and self.author_id is not None and self.guild is not None:
-			self.author = await self.guild.fetch_member(self.author_id)
-		
-		if not self.__loading_message_sent:
-			await self.send(content="Loading...")
-			self.__loading_message_sent = True
-		
-		try:
-			await super().__aenter__()
-		except discord.errors.Forbidden:
-			self._loading = None
+		await self._ctx.respond()
+		if not await super().__aenter__():
+			messages = await self._ctx.send("Loading...")
+			self.__loading_message = messages[0]
+
+	@property
+	def __command(self):
+		output = self._ctx.name
+		if self._ctx.subcommand_group is not None:
+			output += " "+self._ctx.subcommand_group
+		if self._ctx.subcommand_name is not None:
+			output += " "+self._ctx.subcommand_name
+		return output

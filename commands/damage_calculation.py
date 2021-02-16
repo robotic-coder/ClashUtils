@@ -127,3 +127,7 @@ def setup(bot: discord.ext.commands.Bot):
 async def damage_slash(ctx: SlashContext, building_hp, spells):
 	resp = SlashResponder(ctx)
 	await damage(resp, building_hp, spells)
+	await resp.send_command({
+		"building-hp": str(building_hp),
+		"items": spells
+	})
