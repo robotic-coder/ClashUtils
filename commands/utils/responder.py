@@ -115,10 +115,9 @@ class SlashResponder(Responder):
 		await self._ctx.send_hidden("/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]))
 
 	async def __aenter__(self):
+		await self._ctx.respond()
 		await super().__aenter__()
-		if self._loading is not None:
-			await self._ctx.respond()
-		else:
+		if self._loading is None:
 			self.__loading_message = await self._ctx.send("Loading...")
 		return self
 
