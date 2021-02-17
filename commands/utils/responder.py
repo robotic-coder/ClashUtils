@@ -35,17 +35,14 @@ class Responder():
 		elif input in self.bot.global_aliases:
 			return self.bot.global_aliases[input]
 		else: return None
-		
+
 	async def __aenter__(self):
-		if self._loading is None:
-			return False
-		
-		try:
-			await self._loading.__aenter__()
-			return True
-		except discord.errors.Forbidden:
-			self._loading = None
-			return False
+		if self._loading is not None:
+			try:
+				await self._loading.__aenter__()
+			except discord.errors.Forbidden:
+				self._loading = None
+		return self
 
 	async def __aexit__(self, err_type, err_value, traceback):
 		if err_value is not None:
@@ -118,10 +115,12 @@ class SlashResponder(Responder):
 		await self._ctx.send_hidden("/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]))
 
 	async def __aenter__(self):
-		await self._ctx.respond()
-		if not await super().__aenter__():
-			messages = await self._ctx.send("Loading...")
-			self.__loading_message = messages[0]
+		await super().__aenter__()
+		if self._loading is None:
+			await self._ctx.respond()
+		else:
+			self.__loading_message = await self._ctx.send("Loading...")
+		return self
 
 	@property
 	def __command(self):

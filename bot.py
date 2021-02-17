@@ -21,7 +21,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		)
 
 		if os.environ["ENVIRONMENT"] == "live":
-			self.command_guild_ids = None
+			self.command_guild_ids = [] #Documentation is unclear on whether this should be None or an empty list. None causes a crash and empty list works.
 			self.slash_command_prefix = ""
 		else:
 			self.command_guild_ids = [
