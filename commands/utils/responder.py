@@ -116,7 +116,7 @@ class SlashResponder(Responder):
 
 	async def __aenter__(self):
 		await super().__aenter__()
-		if self._loading is None:
+		if self._loading is not None:
 			await self._ctx.respond()
 		else:
 			self.__loading_message = await self._ctx.send("Loading...")
