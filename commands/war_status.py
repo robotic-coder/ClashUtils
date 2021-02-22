@@ -10,6 +10,14 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 
+class ClanWar(coc.ClanWar): #not currently used
+	@property
+	def cwl_round(self):
+		if not self.is_cwl: return None
+		for (index, war_round) in self.league_group.rounds:
+			if self.war_tag in war_round:
+				return index+1
+
 @discord.ext.commands.group(
 	name = "war",
 	description = "Displays information from a clan's current war.",
