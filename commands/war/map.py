@@ -5,11 +5,12 @@ import re
 from math import floor
 from datetime import datetime
 from commands.utils.helpers import *
+from commands.utils.help import *
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
-		
-async def currentwar(resp: Responder, tag: str, show_names: bool, num_attacks: int, cwl_round: int):
+
+async def map(resp: Responder, tag: str, show_names: bool, num_attacks: int, cwl_round: int):
 	tag = resp.resolve_clan(tag)
 	if tag is None:
 		await resp.send("Invalid clan tag or alias")
@@ -200,25 +201,26 @@ def get_time_delta(start, end):
 
 
 @discord.ext.commands.command(
-	name = "currentwar",
+	name = "map",
 	description = "Displays a clan's current war status.",
 	brief = "Displays the current war for the given clan.",
 	usage = "[#CLANTAG or alias]",
 	help = "#8PQGQC8"
 )
-async def currentwar_standard(ctx: discord.ext.commands.Context, *args):
+async def map_standard(ctx: discord.ext.commands.Context, *args):
 	resp = StandardResponder(ctx)
 	if len(args) != 1:
 		return await resp.send_help()
 	async with resp:
-		await currentwar(resp, args[0], False, None, None)
+		await map(resp, args[0], False, None, None)
 
-def setup(bot: discord.ext.commands.Bot):
-	bot.add_command(currentwar_standard)
-
-	bot.add_slash_command(currentwar_slash,
-		name="currentwar",
-		description="Displays the war status for the given clan.",
+def setup(bot: discord.ext.commands.Bot, group: discord.ext.commands.Group):
+	group.add_command(map_standard)
+	bot.add_slash_subcommand(map_slash,
+		base="war",
+		base_description="Various commands to view clan wars.",
+		name="map",
+		description="Displays the current war map for the given clan.",
 		options=[{
 			"type": 3,
 			"name": "clan",
@@ -270,7 +272,7 @@ def setup(bot: discord.ext.commands.Bot):
 	)
 
 
-async def currentwar_slash(ctx: SlashContext, tag, size="compact", num_attacks=None, cwl_round=None):
+async def map_slash(ctx: SlashContext, tag, size="compact", num_attacks=None, cwl_round=None):
 	if isinstance(num_attacks, int):
 		#tag, size, cwl_round
 		cwl_round = num_attacks
@@ -290,4 +292,4 @@ async def currentwar_slash(ctx: SlashContext, tag, size="compact", num_attacks=N
 		await resp.send("You cannot use `num-attacks` and `cwl-round` together.")
 		return
 	async with resp:
-		await currentwar(resp, tag, size == "full", num_attacks, cwl_round)
+		await map(resp, tag, size == "full", num_attacks, cwl_round)

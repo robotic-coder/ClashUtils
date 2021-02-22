@@ -19,7 +19,7 @@ async def alias(ctx: discord.ext.commands.Context):
 async def add(resp: Responder, alias_name: str, tag: str):
 	if resp.guild_id is None:
 		return await resp.send("You can only add aliases in a server.")
-	if resp.author is None:
+	if resp.guild is None:
 		return await resp.send("I can't see your server permissions. Please add me to the server.")
 	if resp.author.guild_permissions.manage_guild == False:
 		return await resp.send("You need `Manage Server` permissions to add aliases in this server.")
@@ -45,7 +45,7 @@ async def add(resp: Responder, alias_name: str, tag: str):
 async def remove(resp: Responder, alias_name: str):
 	if resp.guild_id is None:
 		return await resp.send("You can only remove aliases in a server.")
-	if resp.author is None:
+	if resp.guild is None:
 		return await resp.send("I can't see your server permissions. Please add me to the server.")
 	if resp.author.guild_permissions.manage_guild == False:
 		return await resp.send("You need `Manage Server` permissions to remove aliases in this server.")

@@ -71,7 +71,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			"commands.invite",
 			"commands.help",
 			"commands.max_war_score",
-			"commands.war_status"
+			"commands.war.root"
 		]
 		for extension in extensions:
 			self.load_extension(extension)
