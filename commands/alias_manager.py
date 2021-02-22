@@ -71,7 +71,8 @@ async def _list(resp: Responder):
 		lines.append("`"+aliases[i]["alias"]+"` - "+clans[i].name+" ("+clans[i].tag+")")
 
 	embed = discord.Embed(title="Clan Tag Aliases")
-	embed.set_author(name=resp.guild.name)
+	if resp.guild is not None:
+		embed.set_author(name=resp.guild.name)
 	embeds = generate_embeds(lines, embed)
 	await resp.send(embeds=embeds)
 
