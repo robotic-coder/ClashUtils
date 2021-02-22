@@ -21,7 +21,7 @@ async def add(resp: Responder, alias_name: str, tag: str):
 		return await resp.send("You can only add aliases in a server.")
 	if resp.guild is None:
 		return await resp.send("I can't see your server permissions. Please add me to the server.")
-	if resp.author.guild_permissions.manage_guild == False:
+	if resp.guild is not None and resp.author.guild_permissions.manage_guild == False:
 		return await resp.send("You need `Manage Server` permissions to add aliases in this server.")
 	if alias_name.startswith("#"):
 		return await resp.send("Alias cannot begin with a #")
