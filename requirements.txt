@@ -1,5 +1,5 @@
 coc.py==1.0.4
-git+git://github.com:robotic-coder/discord-py-slash-command.git
+git+git://github.com/robotic-coder/discord-py-slash-command.git
 discord.py==1.6.0
 heroku3==4.2.3
 psycopg2==2.8.6
