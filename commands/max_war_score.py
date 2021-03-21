@@ -13,7 +13,7 @@ async def maxscore(resp: Responder, tag: str, reach: str, num_attacks: int):
 	if tag is None:
 		return await resp.send("Invalid clan tag or alias")
 
-	war = await find_current_war(tag, resp.clash)
+	war = await resp.clash.get_current_war(tag, allow_prep=True)
 	if war.state == "notInWar":
 		clan = await resp.clash.get_clan(tag)
 		await resp.send(clan.name+" ("+tag+") is not in war.")

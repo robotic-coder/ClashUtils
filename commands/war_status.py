@@ -34,7 +34,7 @@ async def get_war(resp: Responder, tag: str, num_attacks: str, cwl_round: int):
 		return None
 
 	if cwl_round is None:
-		war = await find_current_war(tag, resp.clash)
+		war = await resp.clash.get_current_war(tag, allow_prep=True)
 		if war is None:
 			clan = await resp.clash.get_clan(tag)
 			await resp.send(clan.name+" ("+tag+") has a private war log.")

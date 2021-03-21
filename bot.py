@@ -7,6 +7,7 @@ import discord
 import discord.ext.commands
 import commands.utils.emojis as emojis
 from commands.easter_eggs import easter_eggs
+from utils.clash import Clash
 from utils.storage import Storage
 from discord_slash import SlashCommand, SlashContext
 
@@ -34,7 +35,8 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 			os.environ["CLASH_EMAIL"],
 			os.environ["CLASH_PASSWORD"],
 			key_names=os.environ["CLASH_TOKEN_NAME"],
-			key_count=2
+			key_count=2,
+			client=Clash
 		)
 
 		self.storage = Storage(os.environ["DATABASE_URL"])

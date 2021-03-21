@@ -32,11 +32,11 @@ def generate_embeds(lines: list, embed=discord.Embed()):
 	else:
 		return [embed]
 
-async def find_current_war(tag: str, clash: coc.Client):
+"""async def find_current_war(tag: str, clash: coc.Client):
 	war = await clash.get_current_war(tag)
 	if war is None or (war is not None and war.is_cwl and war.state == "warEnded"):
 		war = await clash.get_current_war(tag, cwl_round=coc.WarRound.current_preparation)
-	return war
+	return war"""
 
 def stars(num_stars):
 	output = ""
