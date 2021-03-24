@@ -115,13 +115,15 @@ class SlashResponder(Responder):
 		await self._ctx.send_hidden("/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]))
 
 	async def __aenter__(self):
+		# Removing "ClashUtils is typing..." for slash commands as Discord now has a built in loading indicator that appears when _ctx.respond() is called.
 		await self._ctx.respond()
-		# remove "ClashUtils is typing..." for slash commands as Discord now has a built in loading indicator.
-		# Set set _loading to None as if we do not have typing access, and bypass the loading message that would usually appear when we do not have typing access
+		# Set _loading to None as if we do not have typing access
 		self._loading = None
+		# and bypass the loading message that would usually appear when we do not have typing access.
 		"""await super().__aenter__()
 		if self._loading is None:
 			self.__loading_message = await self._ctx.send("Loading...")"""
+		# This completely removes the previous loading indicator for slash commands.
 		return self
 
 	@property
