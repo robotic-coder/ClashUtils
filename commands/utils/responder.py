@@ -123,7 +123,6 @@ class SlashResponder(Responder):
 		"""await super().__aenter__()
 		if self._loading is None:
 			self.__loading_message = await self._ctx.send("Loading...")"""
-		# This completely removes the previous loading indicator for slash commands.
 		return self
 
 	@property
