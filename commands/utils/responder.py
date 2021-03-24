@@ -116,9 +116,12 @@ class SlashResponder(Responder):
 
 	async def __aenter__(self):
 		await self._ctx.respond()
-		await super().__aenter__()
+		# remove "ClashUtils is typing..." for slash commands as Discord now has a built in loading indicator.
+		# Set set _loading to None as if we do not have typing access, and bypass the loading message that would usually appear when we do not have typing access
+		self._loading = None
+		"""await super().__aenter__()
 		if self._loading is None:
-			self.__loading_message = await self._ctx.send("Loading...")
+			self.__loading_message = await self._ctx.send("Loading...")"""
 		return self
 
 	@property
