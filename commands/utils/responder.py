@@ -16,10 +16,6 @@ class Responder():
 		self.guild = ctx.guild
 		self.guild_id: int
 
-		if self.channel is not None:
-			self._loading = self.channel.typing()
-		else: self._loading = None
-
 	async def send(self, content="", embeds=[]):
 		pass
 
@@ -36,26 +32,13 @@ class Responder():
 			return self.bot.global_aliases[input]
 		else: return None
 
-	async def __aenter__(self):
-		if self._loading is not None:
-			try:
-				await self._loading.__aenter__()
-			except discord.errors.Forbidden:
-				self._loading = None
-		return self
-
-	async def __aexit__(self, err_type, err_value, traceback):
-		if err_value is not None:
-			await self.send("An error occurred!\nError details: `"+str(err_value)+"`")
-		if self._loading is not None:
-			await self._loading.__aexit__(err_type, err_value, traceback)
-
 class StandardResponder(Responder):
 	def __init__(self, ctx: discord.ext.commands.Context):
 		super().__init__(ctx)
 		self.author_id = ctx.author.id
 		self.channel_id = ctx.channel.id
 		self.guild_id = ctx.guild.id
+		self._loading = self.channel.typing()
 
 	async def send(self, content="", embeds=[]):
 		if len(embeds) > 0:
@@ -72,20 +55,29 @@ class StandardResponder(Responder):
 		lookup = self._ctx.command.qualified_name.split(" ")
 		return await self.send(content=error, embeds=[help.get_help_standard(self.bot, *lookup)])
 
+	async def __aenter__(self):
+		if self._loading is not None:
+			try:
+				await self._loading.__aenter__()
+			except discord.errors.Forbidden:
+				self._loading = None
+		return self
+
+	async def __aexit__(self, err_type, err_value, traceback):
+		if err_value is not None:
+			await self.send("An error occurred!\nError details: `"+str(err_value)+"`")
+		if self._loading is not None:
+			await self._loading.__aexit__(err_type, err_value, traceback)
+
 class SlashResponder(Responder):
 	def __init__(self, ctx: SlashContext):
 		super().__init__(ctx)
-		self.__loading_message = None
 		self.author_id = ctx.author_id
 		self.channel_id = ctx.channel_id
 		self.guild_id = ctx.guild_id
 
 	async def send(self, content="", embeds=[]):
-		output = await self.__send(content, embeds)
-		if self.__loading_message is not None:
-			await self.__loading_message.delete()
-			self.__loading_message = None
-		return output
+		return await self.__send(content, embeds)
 
 	async def __send(self, content, embeds):
 		size = 0
@@ -99,31 +91,21 @@ class SlashResponder(Responder):
 			return [message]+output
 		else: return [message]
 
-		"""if len(embeds) > 10:
-			await self._ctx.send(content=content, embeds=embeds[:10])
-			await self.__send("", embeds[10:])
-		elif len(embeds) > 0 or len(content) > 0:
-			await self._ctx.send(content=content, embeds=embeds)
-
-		return []"""
-
 	async def send_help(self, error=""):
 		return await self.send(content=error, embeds=[help.get_help_slash(self.bot, self.__command)])
 
 	async def send_command(self, params):
-		await self._ctx.send_hidden("Your command (if you want to copy it on mobile):")
-		await self._ctx.send_hidden("/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]))
+		pass
+		#await self._ctx.send(content="Your command (if you want to copy it on mobile):", hidden=True)
+		#await self._ctx.send(content="/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]), hidden=True)
 
 	async def __aenter__(self):
-		# Removing "ClashUtils is typing..." for slash commands as Discord now has a built in loading indicator that appears when _ctx.respond() is called.
-		await self._ctx.respond()
-		# Set _loading to None as if we do not have typing access
-		self._loading = None
-		# and bypass the loading message that would usually appear when we do not have typing access.
-		"""await super().__aenter__()
-		if self._loading is None:
-			self.__loading_message = await self._ctx.send("Loading...")"""
+		await self._ctx.defer()
 		return self
+
+	async def __aexit__(self, err_type, err_value, traceback):
+		if err_value is not None:
+			await self.send("An error occurred!\nError details: `"+str(err_value)+"`")
 
 	@property
 	def __command(self):
