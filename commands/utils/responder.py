@@ -95,9 +95,8 @@ class SlashResponder(Responder):
 		return await self.send(content=error, embeds=[help.get_help_slash(self.bot, self.__command)])
 
 	async def send_command(self, params):
-		pass
-		#await self._ctx.send(content="Your command (if you want to copy it on mobile):", hidden=True)
-		#await self._ctx.send(content="/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]), hidden=True)
+		await self._ctx.send(content="Due to a Discord bug you might not be able to fully copy your command on PC. Here it is, in case you want to copy it:", hidden=True)
+		await self._ctx.send(content="/"+self.__command+" "+" ".join([key+": "+value for (key, value) in params.items()]), hidden=True)
 
 	async def __aenter__(self):
 		await self._ctx.defer()
