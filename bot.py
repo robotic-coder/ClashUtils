@@ -60,7 +60,7 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 	async def on_ready(self):
 		print("Logged in as "+str(self.user))
 		emojis.setup(self)
-		self.icons = emojis.Emojis(self)
+		self.icons = emojis.IconList(self)
 		
 		self.slash = SlashCommand(self)
 
