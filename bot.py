@@ -24,18 +24,20 @@ class ClashUtilsBot(discord.ext.commands.Bot):
 		if os.environ["ENVIRONMENT"] == "live":
 			self.command_guild_ids = None
 			self.slash_command_prefix = ""
+			key_count = 2
 		else:
 			self.command_guild_ids = [
 				738656460430377013, #main guild
 				789297914446348299 #slash-only guild
 			]
 			self.slash_command_prefix = "dev-"
+			key_count = 1
 
 		self.clash = coc.login(
 			os.environ["CLASH_EMAIL"],
 			os.environ["CLASH_PASSWORD"],
 			key_names=os.environ["CLASH_TOKEN_NAME"],
-			key_count=2,
+			key_count=key_count,
 			client=Clash
 		)
 

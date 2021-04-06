@@ -18,7 +18,7 @@ async def damage(resp: Responder, building_hp: str, spell_list: str):
 	
 	spells = spell_list.split(", ")
 	if len(spells) >= 14:
-		return await resp.send("You can't use more than 14 spells!")
+		return await resp.send("You can't use more than 15 items!")
 	
 	result = calculate(building_hp, spells, calc_rounding_function=floor)
 	if result is None:

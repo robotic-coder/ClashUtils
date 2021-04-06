@@ -10,14 +10,6 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 
-class ClanWar(coc.ClanWar): #not currently used
-	@property
-	def cwl_round(self):
-		if not self.is_cwl: return None
-		for (index, war_round) in self.league_group.rounds:
-			if self.war_tag in war_round:
-				return index+1
-
 @discord.ext.commands.group(
 	name = "war",
 	description = "Displays information from a clan's current war.",
@@ -95,7 +87,7 @@ async def map(resp: Responder, tag: str, show_names: bool, num_attacks: str, cwl
 
 async def create_map_prep(clash, war, bases_input, show_names):
 	content = "\n".join([
-		"**"+war.clan.name+"** vs **"+war.opponent.name+"**",
+		"**"+war.clan.name+"** vs **"+war.opponent.name+"**"+("\nCWL round "+str(war.cwl_round) if war.cwl_round is not None else ""),
 		"Starting in "+get_time_delta(war.start_time.now, war.start_time.time)
 	])
 
@@ -158,7 +150,7 @@ def create_map_battle(war, bases, show_names, max_attacks):
 		state = "Ended "+get_time_delta(war.end_time.time, war.end_time.now)+" ago"
 
 	content = "\n".join([
-		"**"+war.clan.name+"** vs **"+war.opponent.name+"**",
+		"**"+war.clan.name+"** vs **"+war.opponent.name+"**"+("\nCWL round "+str(war.cwl_round) if war.cwl_round is not None else ""),
 		state,
 		"`Stars             "+pad_left(war.clan.stars, 3)+" - "+pad_right(war.opponent.stars, 3)+spaces(4)+"`",
 		"`Destruction   "+pad_left(round_fixed(war.clan.destruction, 2)+"%", 7)+" - "+pad_right(round_fixed(war.opponent.destruction, 2)+"%", 7)+"`",
@@ -259,7 +251,7 @@ async def attacks(resp: Responder, tag: str, show_names: bool, max_attacks: str,
 	elif war.state == "warEnded":
 		state = "Ended "+get_time_delta(war.end_time.time, war.end_time.now)+" ago"
 	content = "\n".join([
-		"**"+war.clan.name+"** vs **"+war.opponent.name+"**",
+		"**"+war.clan.name+"** vs **"+war.opponent.name+"**"+("\nCWL round "+str(war.cwl_round) if war.cwl_round is not None else ""),
 		state,
 		"`Stars             "+pad_left(war.clan.stars, 3)+" - "+pad_right(war.opponent.stars, 3)+spaces(4)+"`",
 		"`Destruction   "+pad_left(round_fixed(war.clan.destruction, 2)+"%", 7)+" - "+pad_right(round_fixed(war.opponent.destruction, 2)+"%", 7)+"`",

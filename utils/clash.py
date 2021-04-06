@@ -1,7 +1,15 @@
 import coc
 
+class War(coc.ClanWar):
+	@property
+	def cwl_round(self):
+		if self.league_group is None: return None
+		for (index, war_round) in enumerate(self.league_group.rounds):
+			if self.war_tag in war_round:
+				return index+1
+
 class Clash(coc.Client):
-	async def get_current_war(self, clan_tag: str, cwl_round=coc.WarRound.current_war, cls=coc.ClanWar, allow_prep: bool = False, **kwargs):
+	async def get_current_war(self, clan_tag: str, cwl_round=coc.WarRound.current_war, cls=War, allow_prep: bool = False, **kwargs):
 		if cwl_round == coc.WarRound.current_war:
 			war = await super().get_current_war(clan_tag, cwl_round=coc.WarRound.current_war, cls=cls, **kwargs)
 			group = war.league_group if war is not None and war.is_cwl else None
