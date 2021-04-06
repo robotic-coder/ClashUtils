@@ -23,7 +23,7 @@ class IconList:
 			11: bot.get_emoji(744711852738740294),
 			12: bot.get_emoji(765501467477540894),
 			13: bot.get_emoji(765501454852161556),
-			14: bot.get_emoji(828313026356707338)
+			14: bot.get_emoji(828970456233148476)
 		}
 
 		self.spells = {

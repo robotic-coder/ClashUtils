@@ -9,10 +9,10 @@ from commands.utils.responder import *
 
 earthquake_damage = ( 0.145, 0.17, 0.21, 0.25, 0.29 )
 lightning_damage = ( 150, 180, 210, 240, 270, 320, 400, 480, 560 )
-shield_damage = ( 1260, 1460, 1660, 1860, 1960 )
+shield_damage = ( 1260, 1460, 1660, 1860, 1960, 2060 )
 
 async def damage(resp: Responder, building_hp: str, spell_list: str):
-	spell_checker = re.match("^(((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-5])))((, )|$))+)", spell_list)
+	spell_checker = re.match("^(((\d+)x ((earthquake([1-5]))|(lightning([1-9]))|(shield([1-6])))((, )|$))+)", spell_list)
 	if spell_checker is None:
 		return await resp.send_help("Invalid syntax.")
 	
