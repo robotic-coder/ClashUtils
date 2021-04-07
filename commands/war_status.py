@@ -6,6 +6,7 @@ from math import floor
 from datetime import datetime
 from commands.utils.helpers import *
 from commands.utils.help import *
+from utils.clash import Clash, War
 import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
@@ -50,7 +51,7 @@ async def get_war(resp: Responder, tag: str, num_attacks: str, cwl_round: int):
 				return None
 			await resp.send("Select a number between 1 and "+str(len(group.rounds))+".")
 			return None
-		war = await resp.clash.get_league_wars(group.rounds[cwl_round-1], tag)._next()
+		war = await resp.clash.get_league_wars(group.rounds[cwl_round-1], tag, War)._next()
 	return war
 
 async def map(resp: Responder, tag: str, show_names: bool, num_attacks: str, cwl_round: int):
