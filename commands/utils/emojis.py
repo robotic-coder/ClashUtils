@@ -64,7 +64,7 @@ def setup(bot: discord.Client):
 		elif emoji.id == 744711852738740294: th[11] = emoji
 		elif emoji.id == 765501467477540894: th[12] = emoji
 		elif emoji.id == 765501454852161556: th[13] = emoji
-		elif emoji.id == 828313026356707338: th[14] = emoji
+		elif emoji.id == 828970456233148476: th[14] = emoji
 		
 		elif emoji.id == 776194523150811156: spells["lightning"] = emoji
 		elif emoji.id == 776194265712820225: spells["earthquake"] = emoji
