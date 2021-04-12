@@ -1,12 +1,18 @@
 import coc
 
 class War(coc.ClanWar):
+	# Temporary fix because API does not currently report teamSize
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.team_size = len(self.clan.members)
+
 	@property
 	def cwl_round(self):
 		if self.league_group is None: return None
 		for (index, war_round) in enumerate(self.league_group.rounds):
 			if self.war_tag in war_round:
 				return index+1
+
 
 class Clash(coc.Client):
 	async def get_current_war(self, clan_tag: str, cwl_round=coc.WarRound.current_war, cls=War, allow_prep: bool = False, **kwargs):
