@@ -68,13 +68,19 @@ class ArmyUnit:
 		self.base = base
 
 async def get_army_details(clash: coc.Client, target_name: str):
+	target_name = target_name.lower()
 	global army_levels
 	if army_levels is None:
 		await init_army_details(clash)
 
-	if target_name.lower() == "pekka": target_name = "p.e.k.k.a"
+	translations = {
+		"pekka": "p.e.k.k.a",
+		"lassi": "l.a.s.s.i",
+	}
+
+	if target_name in translations.keys(): target_name = translations[target_name]
 	for unit in army_levels.values():
-		if target_name.lower().startswith(unit.name.lower()):
+		if target_name.lower() == unit.name.lower():
 			return unit
 	return None
 
