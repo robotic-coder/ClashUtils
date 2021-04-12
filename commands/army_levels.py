@@ -81,7 +81,7 @@ async def get_army_details(clash: coc.Client, target_name: str):
 async def init_army_details(clash: coc.Client):
 	global army_levels
 	# Use http to get raw data from the API, because coc.py strips out super troops from Player objects
-	player = await clash.http.get_player("#GURQUU2Y")
+	player = await clash.http.get_player("#28QQU9CU")
 	army_levels = {}
 	for troop in player["troops"]:
 		if troop["village"] == "home":
