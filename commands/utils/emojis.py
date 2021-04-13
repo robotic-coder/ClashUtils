@@ -11,6 +11,7 @@ class IconList:
 		}
 
 		self.th = {
+			1: bot.get_emoji(831505699158360074),
 			2: bot.get_emoji(744711577000738869),
 			3: bot.get_emoji(744711605022883890),
 			4: bot.get_emoji(744711633900929135),
@@ -52,6 +53,7 @@ def setup(bot: discord.Client):
 		elif emoji.id == 744712034209497108: heroes["warden"] = emoji
 		elif emoji.id == 744712056623595712: heroes["champion"] = emoji
 
+		elif emoji.id == 831505699158360074: th[1] = emoji
 		elif emoji.id == 744711577000738869: th[2] = emoji
 		elif emoji.id == 744711605022883890: th[3] = emoji
 		elif emoji.id == 744711633900929135: th[4] = emoji
