@@ -26,24 +26,47 @@ async def levels(resp, tag, name):
 
 	members = []
 	async for player in clan.get_detailed_members():
-		search = [u for u in getattr(player, unit.type) if u.name == unit.name or (unit.base is not None and u.name == unit.base.name and u.level >= unit.min and player.town_hall >= 11)]
-		if len(search) > 0:
-			members.append({
-				"account": player,
-				"level": search[0].level
-			})
-	members = sorted(members, key=lambda x: (x["level"]*-1, x["account"].name.lower()))
+		if unit.base is not None:
+			# super troop
+			base = [u for u in getattr(player, unit.type) if u.name == unit.base.name]
+			if len(base) > 0:
+				search = [u for u in getattr(player, unit.type) if u.name == unit.name and base[0].level >= unit.min and player.town_hall >= 11]
+				if len(search) > 0:
+					members.append({
+						"account": player,
+						"level": base[0].level,
+						"enabled": 1 if search[0].is_active else 0
+					})
+		else:
+			# other
+			search = [u for u in getattr(player, unit.type) if u.name == unit.name]
+			if len(search) > 0:
+				members.append({
+					"account": player,
+					"level": search[0].level,
+					"enabled": 1
+				})
+	members = sorted(members, key=lambda x: (x["enabled"]*-1, x["level"]*-1, x["account"].name.lower()))
 	lines = []
+	#pretend that super troop labels were already sent if unit is not a super troop
+	sent_active_label = unit.base is None
+	sent_inactive_label = unit.base is None
 	for member in members:
+		if not sent_active_label and member["enabled"] == 1:
+			lines.append("**Active**")
+			sent_active_label = True
+		elif not sent_inactive_label and member["enabled"] == 0:
+			lines.append("**Inactive**")
+			sent_inactive_label = True
+			
 		name = member["account"].name
-		if member["level"]+level_boost >= unit.max and (unit.type == "troops" or unit.type == "spells"):
+		if member["level"]+level_boost >= unit.max and unit.donatable:
 			name = "**"+name+"**"
 		lines.append(str(emojis.th[member["account"].town_hall])+"` "+pad_left(member["level"], 2)+" `"+name)
 
 	embed = discord.Embed()
 	if unit.base is not None:
 		min = "min "+str(unit.min)+", "
-		embed.set_footer(text="These members are able to activate the "+unit.name+", but don't necessarily have it active.")
 	else: min = ""
 	embed.set_author(name=clan.name, url=clan.share_link, icon_url=clan.badge.small)
 	embed.set_footer(text=tag)
@@ -56,11 +79,12 @@ async def levels(resp, tag, name):
 	await resp.send(embeds=embeds)
 
 class ArmyUnit:
-	def __init__(self, name: str, max_level: int, min_level: int, unit_type: str):
+	def __init__(self, name: str, max_level: int, min_level: int, unit_type: str, donatable: bool):
 		self.name = name
 		self.max = max_level
 		self.min = min_level
 		self.type = unit_type
+		self.donatable = donatable
 		self.base = None
 	def setup_super_troop(self, base):
 		self.min = base.max-self.max+1
@@ -86,32 +110,40 @@ async def get_army_details(clash: coc.Client, target_name: str):
 
 async def init_army_details(clash: coc.Client):
 	global army_levels
-	# Use http to get raw data from the API, because coc.py strips out super troops from Player objects
-	player = await clash.http.get_player("#28QQU9CU")
+	player = await clash.get_player("#28QQU9CU")
 	army_levels = {}
-	for troop in player["troops"]:
-		if troop["village"] == "home":
-			army_levels[troop["name"].lower()] = ArmyUnit(troop["name"], troop["maxLevel"], 1, "troops")
-
+	for troop in player.troops:
+		if troop.is_home_base:
+			army_levels[troop.name.lower()] = ArmyUnit(troop.name, troop.max_level, 1, "troops", True)
+	
 	for unit in army_levels.values():
 		match = re.match("^Super (.*)$", unit.name)
-		if match is not None and len([u for u in army_levels.values() if u.name == match.group(1)]) > 0:
-			unit.setup_super_troop(army_levels[match[1].lower()])
+		if match is not None:
+			unit.setup_super_troop(army_levels[match.group(1).lower()])
 		elif unit.name == "Sneaky Goblin":
 			unit.setup_super_troop(army_levels["goblin"])
 		elif unit.name == "Inferno Dragon":
 			unit.setup_super_troop(army_levels["baby dragon"])
 		elif unit.name == "Ice Hound":
 			unit.setup_super_troop(army_levels["lava hound"])
-
-	for hero in player["heroes"]:
-		if hero["village"] == "home":
-			army_levels[hero["name"].lower()] = ArmyUnit(hero["name"], hero["maxLevel"], 1, "heroes")
 	
-	for spell in player["spells"]:
-		if spell["village"] == "home":
-			army_levels[spell["name"].lower()] = ArmyUnit(spell["name"], spell["maxLevel"], 1, "spells")
-	#print(army_levels)
+	for spell in player.spells:
+		if spell.is_home_base:
+			army_levels[spell.name.lower()] = ArmyUnit(spell.name, spell.max_level, 1, "spells", True)
+
+	for hero in player.heroes:
+		if hero.is_home_base:
+			army_levels[hero.name.lower()] = ArmyUnit(hero.name, hero.max_level, 1, "heroes", False)
+
+	#already included in troops
+	#for siege in player.siege_machines:
+	#	if siege.is_home_base:
+	#		army_levels[siege.name.lower()] = ArmyUnit(siege.name, siege.max_level, 1, "siege_machines", True)
+
+	#already included in troops
+	#for pet in player.hero_pets:
+	#	if pet.is_home_base:
+	#		army_levels[pet.name.lower()] = ArmyUnit(pet.name, pet.max_level, 1, "hero_pets", False)
 
 
 
