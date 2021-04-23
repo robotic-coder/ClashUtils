@@ -150,6 +150,8 @@ def create_map_battle(war, bases, show_names, max_attacks):
 	elif war.state == "warEnded":
 		state = "Ended "+get_time_delta(war.end_time.time, war.end_time.now)+" ago"
 
+	duration_tiebreaker = war.clan.stars == war.team_size*3 and war.opponent.stars == war.team_size*3
+	
 	content = "\n".join([
 		"**"+war.clan.name+"** vs **"+war.opponent.name+"**"+("\nCWL round "+str(war.cwl_round) if war.cwl_round is not None else ""),
 		state,
@@ -160,6 +162,9 @@ def create_map_battle(war, bases, show_names, max_attacks):
 	])
 
 	lines = []
+	if duration_tiebreaker:
+		score_padding = 6
+	else: score_padding = 4
 	for index, base in enumerate(bases):
 		if len(base["clan"].attacks) > max_attacks or len(base["enemy"].attacks) > max_attacks:
 			return None
@@ -178,7 +183,10 @@ def create_map_battle(war, bases, show_names, max_attacks):
 		if show_names: clan_name = "\u2066"+pad_left(base["clan"].name, 15)+" "
 		if base["clan"].best_opponent_attack is not None:
 			clan_stars = base["clan"].best_opponent_attack.stars
-			clan_dest = str(base["clan"].best_opponent_attack.destruction)+"%"
+			if duration_tiebreaker:
+				clan_dest = convert_duration(base["clan"].best_opponent_attack.duration)
+			else:
+				clan_dest = str(base["clan"].best_opponent_attack.destruction)+"%"
 
 		for i in range(len(base["clan"].attacks), max_attacks): clan_attacks += "*"
 		for i in range(0, len(base["clan"].attacks)): clan_attacks += " "
@@ -186,16 +194,24 @@ def create_map_battle(war, bases, show_names, max_attacks):
 		if show_names: enemy_name = " "+pad_right(base["enemy"].name, 15)
 		if base["enemy"].best_opponent_attack is not None:
 			enemy_stars = base["enemy"].best_opponent_attack.stars
-			enemy_dest = str(base["enemy"].best_opponent_attack.destruction)+"%"
+			if duration_tiebreaker:
+				enemy_dest = convert_duration(base["enemy"].best_opponent_attack.duration)
+			else:
+				enemy_dest = str(base["enemy"].best_opponent_attack.destruction)+"%"
 
 		for i in range(0, len(base["enemy"].attacks)): enemy_attacks += " "
 		for i in range(len(base["enemy"].attacks), max_attacks): enemy_attacks += "*"
 
-		clan_line = "`"+clan_name+pad_left(clan_dest, 4)+"` "+stars(clan_stars)+" "+str(emojis.th[clan_th])+"`"+clan_attacks
-		enemy_line = enemy_attacks+"`"+str(emojis.th[enemy_th])+" "+stars(enemy_stars)+" `"+pad_right(enemy_dest, 4)+enemy_name+"`"
+		clan_line = "`"+clan_name+pad_left(clan_dest, score_padding)+"` "+stars(clan_stars)+" "+str(emojis.th[clan_th])+"`"+clan_attacks
+		enemy_line = enemy_attacks+"`"+str(emojis.th[enemy_th])+" "+stars(enemy_stars)+" `"+pad_right(enemy_dest, score_padding)+enemy_name+"`"
 		lines.append(clan_line+" "+pad_left((index+1), 2)+" "+enemy_line)
 
 	return (content, lines)
+
+def convert_duration(duration: int):
+	seconds = duration % 60
+	minutes = int((duration-seconds)/60)
+	return str(minutes)+"m "+pad_left(seconds, 2, "0")+"s"
 
 def get_time_delta(start, end):
 	delta = end-start
