@@ -1,11 +1,6 @@
 import coc
 
 class War(coc.ClanWar):
-	# Temporary fix because API does not currently report teamSize
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		self.team_size = len(self.clan.members)
-
 	@property
 	def cwl_round(self):
 		if self.league_group is None: return None
