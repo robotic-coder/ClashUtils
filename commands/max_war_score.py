@@ -6,7 +6,7 @@ import commands.utils.emojis as emojis
 from discord_slash import SlashCommand, SlashContext
 from commands.utils.responder import *
 
-max_th_level = 13
+max_th_level = 14
 
 async def maxscore(resp: Responder, tag: str, reach: str, num_attacks: int):
 	tag = resp.resolve_clan(tag)
