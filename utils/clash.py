@@ -26,12 +26,3 @@ class Clash(coc.Client):
 			return war
 		else:
 			return await super().get_current_war(clan_tag, cwl_round=cwl_round, cls=cls, **kwargs)
-
-	async def get_league_group(self, clan_tag: str, cls=coc.ClanWarLeagueGroup, **kwargs):
-		print("Getting league group for "+clan_tag)
-		try:
-			return await super().get_league_group(clan_tag, cls, **kwargs)
-		except coc.PrivateWarLog:
-			print("Retrying")
-			await self.reset_keys()
-			return await self.get_league_group(clan_tag, cls, **kwargs)
