@@ -83,13 +83,16 @@ def summarise_player(player: coc.Player):
 			output["heroes"] += hero_filtered[0].level
 			output["max_heroes"] += hero_filtered[0].max_level
 		else:
-			output[hero_name] = ""
+			output[hero_name] = 0
 	return output
 
 def generate_hero_levels(player):
 	output = ""
 	for hero_name in hero_names:
-		output += " "+pad_left(player[hero_name], 3)
+		if player[hero_name] > 0:
+			output += " "+pad_left(player[hero_name], 3)
+		else:
+			output += "    "
 	return output
 #def check_max_hero_levels(member: coc.Player):
 	#if member.town_hall
