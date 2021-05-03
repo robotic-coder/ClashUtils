@@ -30,6 +30,6 @@ class Clash(coc.Client):
 	async def get_league_group(self, clan_tag: str, cls=coc.ClanWarLeagueGroup, **kwargs):
 		try:
 			return await super().get_league_group(clan_tag, cls, **kwargs)
-		except PrivateWarLog:
+		except coc.PrivateWarLog:
 			print("Retrying")
 			return await self.get_league_group(clan_tag, cls, **kwargs)
