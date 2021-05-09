@@ -93,6 +93,7 @@ class ArmyUnit:
 
 async def get_army_details(clash: coc.Client, target_name: str):
 	target_name = target_name.lower()
+	if target_name[-1] == "s": target_name = target_name[:-1]
 	global army_levels
 	if army_levels is None:
 		await init_army_details(clash)
